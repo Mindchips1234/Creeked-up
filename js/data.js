@@ -1,6 +1,12 @@
 // Game data for Creeked Up.
 //
-// Species: common Ontario freshwater sport fish.
+// Species: fish found in Ontario Fisheries Management Zone 17 (the user's zone).
+//   Source: Ontario Ministry of Natural Resources, "Background Information to Fisheries
+//   Management Plan for Fisheries Management Zone 17" (Feb 2008), Table 4 and section 3,
+//   https://www.ontario.ca/files/2025-06/264336.pdf , and the FMZ 17 Fisheries Management
+//   Plan (Nov 2009), https://www.ontario.ca/files/2025-06/264321.pdf . Coho, chinook and
+//   Atlantic salmon are from section 3.2 and 3.4.2 (Lake Ontario tributaries in the zone).
+//   These documents are older; species can come and go.
 //   base       = EXP for a typical fish of this species (set by hand: rarer or harder fish score more)
 //   typicalCm  = APPROXIMATE typical adult length, used only for the size bonus.
 //                These are rough placeholders, not sourced figures. Check them against
@@ -15,7 +21,6 @@ const SPECIES = [
   { id: "brown-bullhead",   name: "Brown Bullhead",   base: 15,  typicalCm: 28 },
   { id: "white-sucker",     name: "White Sucker",     base: 15,  typicalCm: 40 },
   { id: "black-crappie",    name: "Black Crappie",    base: 20,  typicalCm: 25 },
-  { id: "freshwater-drum",  name: "Freshwater Drum",  base: 25,  typicalCm: 40 },
   { id: "common-carp",      name: "Common Carp",      base: 35,  typicalCm: 60 },
   { id: "channel-catfish",  name: "Channel Catfish",  base: 40,  typicalCm: 55 },
   { id: "smallmouth-bass",  name: "Smallmouth Bass",  base: 40,  typicalCm: 35 },
@@ -26,14 +31,26 @@ const SPECIES = [
   { id: "northern-pike",    name: "Northern Pike",    base: 50,  typicalCm: 60 },
   { id: "rainbow-trout",    name: "Rainbow Trout",    base: 55,  typicalCm: 50 },
   { id: "brown-trout",      name: "Brown Trout",      base: 55,  typicalCm: 45 },
-  { id: "splake",           name: "Splake",           base: 55,  typicalCm: 40 },
-  { id: "lake-trout",       name: "Lake Trout",       base: 65,  typicalCm: 60 },
   { id: "coho-salmon",      name: "Coho Salmon",      base: 70,  typicalCm: 60 },
   { id: "atlantic-salmon",  name: "Atlantic Salmon",  base: 80,  typicalCm: 60 },
-  { id: "aurora-trout",     name: "Aurora Trout",     base: 90,  typicalCm: 30 },
   { id: "chinook-salmon",   name: "Chinook Salmon",   base: 85,  typicalCm: 75 },
   { id: "muskellunge",      name: "Muskellunge",      base: 120, typicalCm: 100 },
   { id: "other",            name: "Other / not sure", base: 5,   typicalCm: null },
+];
+
+// Fish the app had before it was limited to Zone 17. Kept only so catches logged before
+// still show the right name and EXP. They can't be picked when logging a new catch.
+//   freshwater-drum: not in the FMZ 17 species table (only mentioned in the Bay of Quinte,
+//                    which is Lake Ontario, not Zone 17)
+//   lake-trout:      "believed to have disappeared from Stony Lake by late 1980's", and the
+//                    zone has an "absence of lakes supporting ... lake trout"
+//   splake:          closed all year in Zone 17 (Variation Order SF-2025/17)
+//   aurora-trout:    not mentioned in either FMZ 17 document
+const OTHER_REGION_SPECIES = [
+  { id: "freshwater-drum",  name: "Freshwater Drum",  base: 25,  typicalCm: 40 },
+  { id: "splake",           name: "Splake",           base: 55,  typicalCm: 40 },
+  { id: "lake-trout",       name: "Lake Trout",       base: 65,  typicalCm: 60 },
+  { id: "aurora-trout",     name: "Aurora Trout",     base: 90,  typicalCm: 30 },
 ];
 
 // Level titles are the cosmetic reward for reaching each level.
@@ -328,7 +345,12 @@ function distinctSpots(catches) {
 }
 
 function speciesById(id) {
-  return SPECIES.find((s) => s.id === id) || SPECIES[SPECIES.length - 1];
+  return SPECIES.find((s) => s.id === id) || OTHER_REGION_SPECIES.find((s) => s.id === id) || SPECIES[SPECIES.length - 1];
+}
+
+// True for fish found in Zone 17 (in SPECIES), not counting "other".
+function isZoneSpecies(id) {
+  return id !== "other" && SPECIES.some((s) => s.id === id);
 }
 
 function sizeRatio(c) {

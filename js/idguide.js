@@ -6,6 +6,7 @@
 // models don't know Ontario fish. So this is a quick visual key: tap what you see on the
 // fish and it ranks the likely species. The traits are common field-guide marks written
 // from general knowledge; double-check with a field guide or iNaturalist before keeping a fish.
+// Only fish found in Zone 17 (SPECIES in data.js) are listed.
 
 const ID_TRAITS = [
   { id: "whiskers",   label: "Whiskers around the mouth" },
@@ -38,7 +39,6 @@ const ID_GUIDE = {
   "channel-catfish": { traits: ["whiskers", "adipose", "spots", "silver"], check: "Deeply forked tail and small dark spots on a grey-silver body." },
   "white-sucker":    { traits: ["suckermouth", "long"], check: "Round mouth under the snout with thick, bumpy lips. No whiskers." },
   "common-carp":     { traits: ["whiskers", "bigscales", "suckermouth", "yellow"], check: "Two pairs of short whiskers, big scales, one long back fin." },
-  "freshwater-drum": { traits: ["spiny", "silver", "suckermouth"], check: "Humped back, rounded tail, long back fin that runs almost to the tail." },
   "black-crappie":   { traits: ["spiny", "tall", "spots"], check: "Silver with black speckles all over, big mouth, 7 to 8 spines on the back fin." },
   "smallmouth-bass": { traits: ["spiny", "bars", "redeye", "yellow"], check: "Bronze with faint vertical bars. Jaw ends below the eye, not past it." },
   "largemouth-bass": { traits: ["spiny", "sidestripe"], check: "Dark stripe along the side. Jaw reaches past the back of the eye." },
@@ -46,15 +46,12 @@ const ID_GUIDE = {
   "northern-pike":   { traits: ["long", "duckbill", "spots"], check: "Light, bean-shaped spots on a dark green body." },
   "muskellunge":     { traits: ["long", "duckbill", "bars", "spots"], check: "Dark bars or spots on a light body; tail lobes pointed. Usually much bigger than pike." },
   "brook-trout":     { traits: ["adipose", "spots", "whiteedge"], check: "Worm-like markings on the back, red spots with blue halos, white-edged lower fins." },
-  "splake":          { traits: ["adipose", "spots", "whiteedge"], check: "Looks like a brook trout but with a slightly forked tail. Hard to tell apart." },
-  "lake-trout":      { traits: ["adipose", "spots", "long", "whiteedge"], check: "Light spots on a dark grey body and a deeply forked tail." },
   "rainbow-trout":   { traits: ["adipose", "spots", "pinkstripe", "silver"], check: "Pink stripe along the side and black spots on the tail." },
   "brown-trout":     { traits: ["adipose", "spots", "yellow"], check: "Black and red spots, often with pale halos. Few or no spots on the tail." },
   "lake-whitefish":  { traits: ["adipose", "silver", "suckermouth"], check: "Small mouth under a blunt snout, silver body, no spots." },
   "coho-salmon":     { traits: ["adipose", "silver", "spots"], check: "Spots on the upper tail only. Gums white at the base of the teeth." },
   "chinook-salmon":  { traits: ["adipose", "silver", "spots"], check: "Spots on the whole tail. Black gums at the base of the teeth." },
   "atlantic-salmon": { traits: ["adipose", "silver", "spots"], check: "X-shaped spots, mostly above the side line. Few or no spots on the tail." },
-  "aurora-trout":    { traits: ["adipose", "whiteedge"], check: "Like a brook trout but with few or no spots. Very rare, check the rules." },
 };
 
 // Ranks species by how many of the chosen traits they have. Species missing a chosen
