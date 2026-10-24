@@ -242,3 +242,38 @@ dd { margin: 0; }
 .map-source a { color: inherit; font-weight: 700; }
 .leaflet-popup-content { font: 14px/1.4 system-ui, sans-serif; }
 .tabs button { font-size: 0.9rem; }
+
+/* ---------- Quests, conditions, tackle, scan ---------- */
+.quests { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.quest { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.quest.done { border-color: var(--good); }
+.quest.done .fill { background: var(--good); }
+.quest-top { display: flex; justify-content: space-between; gap: 8px; font-weight: 700; }
+.quest-reward { color: var(--accent); white-space: nowrap; }
+.quest.done .quest-reward { color: var(--good); }
+.quest-prog { color: var(--muted); font-size: 0.8rem; }
+
+.conditions { display: grid; gap: 12px; }
+.cond-moon { display: flex; gap: 12px; align-items: center; }
+.moon {
+  width: 40px; height: 40px; border-radius: 50%; flex: none;
+  background: linear-gradient(90deg, #f3e9c6 var(--lit), #2b3533 var(--lit));
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.cond-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; }
+.cond-grid div { display: grid; }
+.cond-grid span { color: var(--muted); font-size: 0.8rem; }
+.conditions a { color: inherit; }
+
+.tackle-form { display: flex; gap: 8px; grid-template-columns: none; }
+.tackle-form input { flex: 1; min-width: 0; }
+.tackle-form select { width: 96px; }
+.tackle-list { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 6px; }
+.tackle-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+.small-btn { padding: 6px 10px; font-size: 0.85rem; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+.chip { padding: 8px 12px; border-radius: 99px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-weight: 600; font-size: 0.85rem; }
+.chip[aria-pressed="true"] { background: var(--brand); color: var(--bg); border-color: var(--brand); }
+.id-results { list-style: none; padding: 0; margin: 0 0 8px; display: grid; gap: 6px; }
+.detail-btns { flex-wrap: wrap; }

@@ -43,6 +43,10 @@ const MapView = (() => {
     $("mapTip").hidden = false;
     $("mapTip").innerHTML = `<div class="badge-name">How to start with ${esc(s.name)}</div>
       <div class="badge-desc">${esc(s.tip)}</div>
+      ${(() => {
+        const best = bestBaits(state.catches, s.id)[0];
+        return best ? `<div class="badge-desc"><b>Your best so far:</b> ${esc(best.name)} (${best.n} fish)</div>` : "";
+      })()}
       <div class="tip-note">General tips, not expert or official advice.</div>`;
   }
 

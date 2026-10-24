@@ -41,6 +41,18 @@
         <button type="button" class="primary big" data-go="log">Log a catch</button>
         <button type="button" class="ghost big" data-go="map">Find spots</button>
       </div>
+      <h2>This week's quests</h2>
+      <ul class="quests" id="quests"></ul>
+
+      <h2>Conditions</h2>
+      <div class="card conditions" id="conditions">
+        <div class="cond-moon" id="condMoon"></div>
+        <div id="condWeather" class="cond-weather">
+          <button type="button" class="ghost" id="weatherBtn">Show weather here</button>
+        </div>
+        <div class="tip-note">Weather by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0). Moon phase is worked out on your phone.</div>
+      </div>
+
       <h2>Latest catch</h2>
       <div id="homeLatest" class="home-latest"></div>
       <h2>Next goal</h2>
@@ -93,6 +105,7 @@
         <label>Species
           <select id="species" required></select>
         </label>
+        <button type="button" class="ghost" id="scanBtn">Not sure? Use Fish scan</button>
 
         <div class="row">
           <label class="grow">Length
@@ -122,7 +135,8 @@
         </div>
 
         <label>Bait or lure (optional)
-          <input type="text" id="bait" placeholder="e.g. worm, white spinnerbait">
+          <input type="text" id="bait" list="tackleList" placeholder="e.g. worm, white spinnerbait">
+          <datalist id="tackleList"></datalist>
         </label>
 
         <fieldset class="seg">
@@ -170,6 +184,15 @@
       <h2>Species collection</h2>
       <ul class="collection" id="collection"></ul>
 
+      <h2>Tackle box</h2>
+      <p class="hint">Add your lures and baits. They show up when you log a catch, and the app tracks which ones catch the most.</p>
+      <form id="tackleForm" class="tackle-form">
+        <input type="text" id="tackleName" placeholder="e.g. Silver spoon" required>
+        <select id="tackleType"></select>
+        <button type="submit" class="primary">Add</button>
+      </form>
+      <ul class="tackle-list" id="tackleListUi"></ul>
+
       <h2>Your data</h2>
       <p class="hint">Your catches are saved only on this phone. Export a backup now and then so you don't lose them.</p>
       <div class="data-btns">
@@ -194,6 +217,17 @@
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
   <dialog id="detail"></dialog>
+  <dialog id="idDlg" aria-labelledby="idTitle">
+    <div class="detail-inner">
+      <h2 id="idTitle">Fish scan</h2>
+      <p class="hint">Tap everything you can see on your fish. The best matches show below.</p>
+      <ol class="id-results" id="idResults"></ol>
+      <div class="chips" id="idChips"></div>
+      <p class="tip-note">A quick visual guide, not a sure ID. Double-check with a field guide, or post your photo on
+        <a href="https://www.inaturalist.org/" target="_blank" rel="noopener">iNaturalist</a> for help from experts.</p>
+      <div class="detail-btns"><span></span><button type="button" class="primary" id="idClose">Close</button></div>
+    </div>
+  </dialog>
   <dialog id="levelUp">
     <div class="levelup-inner">
       <div class="levelup-kicker">Level up!</div>
@@ -209,6 +243,11 @@
   <script src="js/game.js"></script>
   <script src="js/db.js"></script>
   <script src="js/spots.js"></script>
+  <script src="js/quests.js"></script>
+  <script src="js/idguide.js"></script>
+  <script src="js/conditions.js"></script>
+  <script src="js/tackle.js"></script>
+  <script src="js/share.js"></script>
   <script src="js/app.js"></script>
   <script src="js/mapview.js"></script>
 </body>
