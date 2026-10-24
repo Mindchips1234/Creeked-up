@@ -29,6 +29,8 @@ const SPECIES = [
   { id: "splake",           name: "Splake",           base: 55,  typicalCm: 40 },
   { id: "lake-trout",       name: "Lake Trout",       base: 65,  typicalCm: 60 },
   { id: "coho-salmon",      name: "Coho Salmon",      base: 70,  typicalCm: 60 },
+  { id: "atlantic-salmon",  name: "Atlantic Salmon",  base: 80,  typicalCm: 60 },
+  { id: "aurora-trout",     name: "Aurora Trout",     base: 90,  typicalCm: 30 },
   { id: "chinook-salmon",   name: "Chinook Salmon",   base: 85,  typicalCm: 75 },
   { id: "muskellunge",      name: "Muskellunge",      base: 120, typicalCm: 100 },
   { id: "other",            name: "Other / not sure", base: 5,   typicalCm: null },

@@ -11,6 +11,7 @@ let state = { catches: [], scored: [], location: null, photoBlob: null };
 // ---------- Startup ----------
 
 document.addEventListener("DOMContentLoaded", async () => {
+  startIntro();
   fillSpeciesSelect();
   resetForm();
   bindEvents();
@@ -39,12 +40,60 @@ function bindEvents() {
   $("importFile").addEventListener("change", importBackup);
   $("clearBtn").addEventListener("click", clearEverything);
   $("levelUpClose").addEventListener("click", () => $("levelUp").close());
+  $("replayIntro").addEventListener("click", playIntro);
+  $("scanBtn").addEventListener("click", openScan);
+  $("idClose").addEventListener("click", () => $("idDlg").close());
+  $("weatherBtn").addEventListener("click", loadWeather);
+  $("tackleType").innerHTML = TACKLE_TYPES.map((t) => `<option>${t}</option>`).join("");
+  $("tackleForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = $("tackleName").value.trim();
+    if (!name) return;
+    Tackle.add(name, $("tackleType").value);
+    $("tackleName").value = "";
+    renderTackle();
+  });
+  document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => showView(b.dataset.go)));
+}
+
+// ---------- Intro ----------
+// "Vanderholst Studios presents", then the app name. Plays on every launch; tap to skip.
+
+const INTRO_MS = 3700;
+let introTimer = 0;
+
+function startIntro() {
+  $("intro").addEventListener("click", endIntro);
+  introTimer = setTimeout(endIntro, introLength());
+}
+
+function introLength() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 900 : INTRO_MS;
+}
+
+function endIntro() {
+  const intro = $("intro");
+  if (intro.classList.contains("out")) return;
+  clearTimeout(introTimer);
+  intro.classList.add("out");
+  setTimeout(() => { intro.hidden = true; }, 450);
+}
+
+function playIntro() {
+  const intro = $("intro");
+  intro.hidden = false;
+  intro.classList.remove("out", "play");
+  void intro.offsetWidth; // restart the CSS animation
+  intro.classList.add("play");
+  clearTimeout(introTimer);
+  introTimer = setTimeout(endIntro, introLength());
 }
 
 function showView(name) {
   document.querySelectorAll(".view").forEach((v) => v.classList.toggle("active", v.id === `view-${name}`));
   document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("active", b.dataset.view === name));
   window.scrollTo(0, 0);
+  if (name === "map") MapView.show();
 }
 
 async function reload() {
@@ -146,6 +195,7 @@ async function onSave(e) {
 
   const before = levelFromExp(totalExp(state.scored)).level;
   const badgesBefore = new Set(earnedBadges(state.catches));
+  const questsBefore = new Set(weekQuests(state.catches, new Date(c.caughtAt)).filter((q) => q.done).map((q) => q.id));
 
   if (state.photoBlob) await Store.putPhoto(id, state.photoBlob);
   await Store.putCatch(c);
@@ -158,6 +208,8 @@ async function onSave(e) {
   let msg = `+${saved.exp} EXP`;
   if (saved.expParts.firstSpecies > 1) msg += " · New species!";
   if (newBadges.length) msg += ` · Badge: ${BADGES.find((b) => b.id === newBadges[0]).name}`;
+  const newQuest = weekQuests(state.catches, new Date(c.caughtAt)).find((q) => q.done && !questsBefore.has(q.id));
+  if (newQuest) msg += ` · Quest done: +${newQuest.reward} EXP`;
   toast(msg);
 
   resetForm();
@@ -170,21 +222,142 @@ async function onSave(e) {
 
 // ---------- Rendering ----------
 
+// Catch EXP plus bonus EXP from finished weekly quests.
 function totalExp(scored) {
-  return scored.reduce((sum, c) => sum + c.exp, 0);
+  return scored.reduce((sum, c) => sum + c.exp, 0) + questExp(scored);
 }
 
 function renderAll() {
   const lv = levelFromExp(totalExp(state.scored));
   $("miniLevel").textContent = `Lv ${lv.level}`;
-  $("levelNum").textContent = lv.level;
-  $("levelTitle").textContent = lv.title;
-  $("levelFill").style.width = `${Math.round(lv.progress * 100)}%`;
-  $("levelExp").textContent = `${lv.intoLevel} / ${lv.need} EXP to level ${lv.level + 1}`;
+  ["", "home"].forEach((p) => {
+    const id = (k) => (p ? p + k : k.charAt(0).toLowerCase() + k.slice(1));
+    $(id("LevelNum")).textContent = lv.level;
+    $(id("LevelTitle")).textContent = lv.title;
+    $(id("LevelFill")).style.width = `${Math.round(lv.progress * 100)}%`;
+    $(id("LevelExp")).textContent = `${lv.intoLevel} / ${lv.need} EXP to level ${lv.level + 1}`;
+  });
+  renderHome();
+  renderQuests();
+  renderMoon();
+  renderTackle();
   renderCatchList();
   renderStats();
   renderBadges();
   renderCollection();
+}
+
+function renderHome() {
+  const hour = new Date().getHours();
+  $("home-h").textContent = hour < 12 ? "Morning bite's on." : hour < 18 ? "Tight lines, angler." : "Evening bite's on.";
+
+  const latest = state.scored[state.scored.length - 1];
+  $("homeLatest").innerHTML = latest
+    ? `<button class="catch-row" data-id="${latest.id}">
+        <span class="catch-main">
+          <span class="catch-name">${esc(speciesById(latest.speciesId).name)}</span>
+          <span class="catch-meta">${fmtDate(latest.caughtAt)}${latest.lengthCm ? " · " + latest.lengthCm + " cm" : ""}</span>
+        </span>
+        <span class="catch-exp">+${latest.exp}</span></button>`
+    : `<p class="empty small">Nothing yet. Your first catch earns the First Fish badge.</p>`;
+  const row = $("homeLatest").querySelector(".catch-row");
+  if (row) row.addEventListener("click", () => openDetail(row.dataset.id));
+
+  const earned = new Set(earnedBadges(state.catches));
+  const next = BADGES.find((b) => !earned.has(b.id));
+  $("homeGoal").innerHTML = next
+    ? `<div class="badge-name">${next.name}</div><div class="badge-desc">${next.desc}</div>`
+    : `<div class="badge-name">Every badge earned</div><div class="badge-desc">More are coming.</div>`;
+}
+
+function renderQuests() {
+  const quests = weekQuests(state.catches, new Date());
+  $("quests").innerHTML = quests.map((q) => `
+    <li class="quest ${q.done ? "done" : ""}">
+      <div class="quest-top"><span class="quest-text">${esc(q.text)}</span><span class="quest-reward">${q.done ? "Done" : `+${q.reward} EXP`}</span></div>
+      <div class="bar"><div class="fill" style="width:${Math.round((q.progress / q.goal) * 100)}%"></div></div>
+      <div class="quest-prog">${q.progress} / ${q.goal}</div>
+    </li>`).join("");
+}
+
+function renderMoon() {
+  const m = moonPhase(new Date());
+  $("condMoon").innerHTML = `<span class="moon" style="--lit:${m.lit}%"></span>
+    <span><b>${m.name}</b><br><span class="catch-meta">${m.lit}% lit</span></span>`;
+}
+
+function loadWeather() {
+  const box = $("condWeather");
+  box.textContent = "Finding you...";
+  if (!("geolocation" in navigator)) { box.textContent = "This browser can't share location."; return; }
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    try {
+      const w = await fetchWeather(pos.coords.latitude, pos.coords.longitude);
+      const t = (iso) => new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+      box.innerHTML = `<div class="cond-grid">
+        <div><b>${Math.round(w.tempC)}°C</b><span>${esc(w.text)}</span></div>
+        <div><b>${Math.round(w.windKmh)} km/h</b><span>Wind</span></div>
+        <div><b>${Math.round(w.pressureHpa)} hPa</b><span>Pressure</span></div>
+        <div><b>${t(w.sunrise)}</b><span>Sunrise</span></div>
+        <div><b>${t(w.sunset)}</b><span>Sunset</span></div>
+      </div>`;
+    } catch {
+      box.innerHTML = `Couldn't load the weather. <button type="button" class="ghost" id="weatherBtn">Try again</button>`;
+      $("weatherBtn").addEventListener("click", loadWeather);
+    }
+  }, () => {
+    box.innerHTML = `Location is off, so weather can't load. <button type="button" class="ghost" id="weatherBtn">Try again</button>`;
+    $("weatherBtn").addEventListener("click", loadWeather);
+  }, { timeout: 15000, maximumAge: 600000 });
+}
+
+function renderTackle() {
+  const items = Tackle.all();
+  const counts = {};
+  bestBaits(state.catches).forEach((b) => { counts[b.name.toLowerCase()] = b.n; });
+  $("tackleList").innerHTML = items.filter((t) => ["Lure", "Bait", "Fly"].includes(t.type))
+    .map((t) => `<option value="${esc(t.name)}"></option>`).join("");
+  $("tackleListUi").innerHTML = items.length
+    ? items.map((t) => `<li><span><b>${esc(t.name)}</b> <span class="catch-meta">${esc(t.type)}${counts[t.name.toLowerCase()] ? ` · ${counts[t.name.toLowerCase()]} fish` : ""}</span></span>
+        <button type="button" class="ghost small-btn" data-del="${esc(t.id)}" aria-label="Remove ${esc(t.name)}">Remove</button></li>`).join("")
+    : `<li class="catch-meta">Nothing in your tackle box yet.</li>`;
+  $("tackleListUi").querySelectorAll("[data-del]").forEach((b) => b.addEventListener("click", () => {
+    Tackle.remove(b.dataset.del);
+    renderTackle();
+  }));
+}
+
+// ---------- Fish scan ----------
+
+let scanChosen = [];
+
+function openScan() {
+  scanChosen = [];
+  $("idChips").innerHTML = ID_TRAITS.map((t) =>
+    `<button type="button" class="chip" data-trait="${t.id}" aria-pressed="false">${esc(t.label)}</button>`).join("");
+  $("idChips").querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => {
+    const on = b.getAttribute("aria-pressed") !== "true";
+    b.setAttribute("aria-pressed", String(on));
+    scanChosen = on ? [...scanChosen, b.dataset.trait] : scanChosen.filter((x) => x !== b.dataset.trait);
+    renderScanResults();
+  }));
+  renderScanResults();
+  $("idDlg").showModal();
+}
+
+function renderScanResults() {
+  const results = identify(scanChosen);
+  $("idResults").innerHTML = results.length
+    ? results.map((r) => `<li><button type="button" class="spot-row" data-pick="${r.id}">
+        <span class="catch-main"><span class="catch-name">${esc(speciesById(r.id).name)}</span>
+        <span class="catch-meta">${esc(r.check)}</span></span>
+        <span class="catch-exp">Pick</span></button></li>`).join("")
+    : `<li class="catch-meta">Tap a few things you can see to get matches.</li>`;
+  $("idResults").querySelectorAll("[data-pick]").forEach((b) => b.addEventListener("click", () => {
+    $("species").value = b.dataset.pick;
+    $("idDlg").close();
+    toast(`Picked ${speciesById(b.dataset.pick).name}. Double-check it before saving.`);
+  }));
 }
 
 async function renderCatchList() {
@@ -274,11 +447,16 @@ async function openDetail(id) {
       </ul>
       <div class="detail-btns">
         <button type="button" class="danger" id="delBtn">Delete</button>
+        <button type="button" class="ghost" id="shareBtn">Share</button>
         <button type="button" class="primary" id="closeBtn">Close</button>
       </div>
     </div>`;
   d.showModal();
   $("closeBtn").onclick = () => d.close();
+  $("shareBtn").onclick = async () => {
+    const result = await shareCatch(c, blob, levelFromExp(totalExp(state.scored)));
+    if (result === "downloaded") toast("Catch card saved as a picture.");
+  };
   $("delBtn").onclick = async () => {
     if (!confirm("Delete this catch? Its EXP will be removed.")) return;
     await Store.deleteCatch(id);
@@ -296,7 +474,7 @@ async function exportBackup() {
     const blob = await Store.getPhoto(c.id);
     if (blob) photos[c.id] = await blobToDataUrl(blob);
   }
-  const data = { app: "creeked-up", version: 1, exportedAt: new Date().toISOString(), catches: state.catches, photos };
+  const data = { app: "creeked-up", version: 1, exportedAt: new Date().toISOString(), catches: state.catches, photos, tackle: Tackle.all() };
   const url = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: "application/json" }));
   const a = document.createElement("a");
   a.href = url;
@@ -316,6 +494,7 @@ async function importBackup(e) {
       await Store.putCatch(c);
       if (data.photos && data.photos[c.id]) await Store.putPhoto(c.id, await (await fetch(data.photos[c.id])).blob());
     }
+    if (Array.isArray(data.tackle)) data.tackle.forEach((t) => Tackle.add(t.name, t.type));
     await reload();
     toast(`Imported ${data.catches.length} catches.`);
   } catch {
