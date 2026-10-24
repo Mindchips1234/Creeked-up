@@ -83,17 +83,30 @@
         <select id="mapMethod"></select>
       </label>
       <button type="button" class="primary" id="mapSearch">Search near me</button>
-      <p class="hint" id="mapStatus">Pick a fish, then search. Your location is used only on this phone.</p>
+      <p class="hint" id="mapStatus">Pick a fish, then search. Your exact location stays on this phone.</p>
       <div id="map" class="map" role="region" aria-label="Map of suggested spots"></div>
+      <ul class="map-legend" aria-label="Map key">
+        <li><span class="key key-water"></span>Water with the fish</li>
+        <li><span class="key" style="background:#1f5fbf"></span>Boat launch</li>
+        <li><span class="key" style="background:#7a3fb8"></span>Dock or pier</li>
+        <li><span class="key" style="background:#2a8f3a"></span>Shore access</li>
+        <li><span class="key" style="background:#e07a1f"></span>Your catches</li>
+      </ul>
       <div id="mapTip" class="card map-tip" hidden></div>
       <ol class="spot-list" id="spotList"></ol>
       <p class="hint map-source">
-        Spots come from Ontario's public
-        <a href="https://data.ontario.ca/dataset/fish-stocking" target="_blank" rel="noopener">fish stocking records</a>
-        (Open Government Licence – Ontario). Stocked means fish were put there, not that they're biting.
-        Bass, pike, perch and muskie aren't stocked, so they aren't on the map yet.
-        Your own catches show as orange dots and stay private on this phone.
-        Always check that the shore is public before you fish it.
+        Which waters have the fish comes from Ontario's
+        <a href="https://data.ontario.ca/dataset/aquatic-resource-area-polygon-segment" target="_blank" rel="noopener">fish survey records</a>
+        and <a href="https://data.ontario.ca/dataset/fish-stocking" target="_blank" rel="noopener">stocking records</a>.
+        Launches and shore spots come from Ontario's
+        <a href="https://data.ontario.ca/dataset/fishing-access-points" target="_blank" rel="noopener">fishing access points</a>
+        (Open Government Licence – Ontario) and
+        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (© OpenStreetMap contributors, ODbL).
+        A fish on record means surveys found it there, not that it's biting today. Access data can be out of date,
+        and Ontario's was last checked in 2015.
+        To search, the app sends a rough area (rounded to about 1 km) to these free services. Your catches
+        show as orange dots and are never sent anywhere.
+        Always check that the shore is public and read the regulations before you fish.
       </p>
     </section>
 
