@@ -48,7 +48,7 @@ function questProgress(q, weekCatches) {
     case "catches": return c.length;
     case "species": return new Set(c.filter((x) => x.speciesId !== "other").map((x) => x.speciesId)).size;
     case "release": return c.filter((x) => x.released).length;
-    case "proof": return c.filter((x) => x.hasPhoto && x.lat != null).length;
+    case "proof": return c.filter((x) => photoCounts(x) && x.lat != null).length;
     case "early": return c.some((x) => new Date(x.caughtAt).getHours() < 8) ? 1 : 0;
     case "target": return c.some((x) => x.speciesId === q.target) ? 1 : 0;
     case "big": return c.some((x) => (sizeRatio(x) || 0) > 1) ? 1 : 0;

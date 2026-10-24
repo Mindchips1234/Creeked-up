@@ -14,7 +14,7 @@ This first version is a **mobile web app**. It runs in the browser on iPhone and
 - **Fish scan:** tap what you see on the fish (spots, whiskers, a white tail tip and so on) and it ranks the likely species, with the key mark to check for each one.
 - **Tackle box:** save your lures and baits. They show up when you log a catch, and the map shows your best bait for each fish.
 - **Share:** turn any catch into a picture card and share it.
-- **Log a catch:** photo from the camera, species, length, weight, time, GPS, bait or lure, kept or released, and notes.
+- **Log a catch:** photo from the camera or the phone's gallery, species, length, weight, time, GPS, bait or lure, kept or released, and notes.
 - **EXP per fish:** based on species, size, first-of-species bonus, a release bonus, and proof (photo and GPS).
 - **Levels:** each level unlocks a new title.
 - **Badges** and a **species collection** with your personal best for each fish.
@@ -31,6 +31,7 @@ EXP = species base × size bonus × first-of-species (×2) × released (×1.1) �
 
 - **Size bonus:** your fish's length compared to a typical length for its species. Smaller fish count for less, but never under ×0.5. Bigger fish count for more, up to ×4.
 - **Proof:** photo and GPS = ×1, one of them = ×0.75, neither = ×0.5.
+- **Gallery photos:** the app reads the date and place saved inside the photo and fills them in. The photo only counts as proof if its date is within 2 days of the catch time, and the same photo can't be logged twice. Screenshots and photos sent through chat apps usually have no date, so they don't count.
 
 The typical lengths and base EXP are set in `js/data.js`. **The typical lengths are rough placeholders** and still need checking against a credible source.
 
