@@ -69,3 +69,58 @@ test("badges", () => {
   for (const id of ["first-catch", "trio", "early-bird", "muskie"]) assert.ok(b.includes(id), id);
   assert.ok(!b.includes("ten-catches"));
 });
+
+test("every badge has a unique id, a name and a description", () => {
+  const ids = run("BADGES.map((b) => b.id)");
+  assert.strictEqual(new Set(ids).size, ids.length);
+  assert.ok(run("BADGES.every((b) => b.name && b.desc && typeof b.test === 'function')"));
+  ctx.none = [];
+  assert.strictEqual(run("earnedBadges(none)").length, 0); // an empty log earns nothing
+});
+
+test("species set and size badges", () => {
+  ctx.list = ["pumpkinseed", "bluegill", "rock-bass", "yellow-perch", "black-crappie"].map((s) => fish({ speciesId: s }));
+  ctx.list.push(fish({ speciesId: "northern-pike", lengthCm: 120, weightKg: 6 }));
+  const b = run("earnedBadges(list)");
+  for (const id of ["panfish-sweep", "five-species", "pike", "monster", "metre-fish", "five-kg", "five-species-day"]) assert.ok(b.includes(id), id);
+  assert.ok(!b.includes("bass-pair"));
+});
+
+test("days are counted in local time, so a late evening catch stays on its own day", () => {
+  ctx.list = [
+    fish({ speciesId: "bluegill", caughtAt: new Date(2026, 9, 24, 23, 30).toISOString() }),
+    fish({ speciesId: "walleye", caughtAt: new Date(2026, 9, 25, 0, 30).toISOString() }),
+    fish({ speciesId: "rock-bass", caughtAt: new Date(2026, 9, 25, 9, 0).toISOString() }),
+  ];
+  assert.ok(!run("earnedBadges(list)").includes("trio"));
+});
+
+test("streaks and weekends", () => {
+  // 24 Oct 2026 is a Saturday.
+  ctx.list = [24, 25, 26].map((d) => fish({ speciesId: "bluegill", caughtAt: new Date(2026, 9, d, 10).toISOString() }));
+  assert.strictEqual(run("longestStreak(list)"), 3);
+  const b = run("earnedBadges(list)");
+  assert.ok(b.includes("weekend-warrior") && b.includes("streak-three"));
+  assert.ok(!b.includes("streak-seven"));
+  ctx.gap = [24, 26].map((d) => fish({ speciesId: "bluegill", caughtAt: new Date(2026, 9, d, 10).toISOString() }));
+  assert.strictEqual(run("longestStreak(gap)"), 1);
+});
+
+test("places must be at least 1 km apart to count separately", () => {
+  ctx.list = [
+    fish({ speciesId: "bluegill", lat: 44.0, lng: -79.0 }),
+    fish({ speciesId: "bluegill", lat: 44.001, lng: -79.0 }), // about 110 m away, same place
+    fish({ speciesId: "bluegill", lat: 44.05, lng: -79.0 }),  // about 5.5 km away
+    fish({ speciesId: "bluegill", lat: 44.1, lng: -79.0 }),
+    fish({ speciesId: "bluegill", lat: null, lng: null }),    // no location, ignored
+  ];
+  assert.strictEqual(run("distinctSpots(list)"), 3);
+  assert.ok(run("earnedBadges(list)").includes("three-spots"));
+});
+
+test("seasons and baits", () => {
+  ctx.list = [0, 3, 6, 9].map((m, i) => fish({ speciesId: "bluegill", caughtAt: new Date(2026, m, 10, 10).toISOString(), bait: ["Worm", "worm ", "Jig", "Spinner"][i] }));
+  const b = run("earnedBadges(list)");
+  assert.ok(b.includes("four-seasons") && b.includes("cold-hands"));
+  assert.ok(!b.includes("five-baits")); // "Worm" and "worm " are the same bait
+});
