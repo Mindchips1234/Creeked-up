@@ -207,7 +207,11 @@ async function onSave(e) {
 
   let msg = `+${saved.exp} EXP`;
   if (saved.expParts.firstSpecies > 1) msg += " · New species!";
-  if (newBadges.length) msg += ` · Badge: ${BADGES.find((b) => b.id === newBadges[0]).name}`;
+  if (newBadges.length) {
+    const b = BADGES.find((x) => x.id === newBadges[0]);
+    const bonus = BADGES.filter((x) => newBadges.includes(x.id)).reduce((sum, x) => sum + x.exp, 0);
+    msg += ` · ${b.secret ? "Secret badge" : "Badge"}: ${b.name}${newBadges.length > 1 ? ` +${newBadges.length - 1} more` : ""} (+${bonus} EXP)`;
+  }
   const newQuest = weekQuests(state.catches, new Date(c.caughtAt)).find((q) => q.done && !questsBefore.has(q.id));
   if (newQuest) msg += ` · Quest done: +${newQuest.reward} EXP`;
   toast(msg);
@@ -222,9 +226,9 @@ async function onSave(e) {
 
 // ---------- Rendering ----------
 
-// Catch EXP plus bonus EXP from finished weekly quests.
+// Catch EXP plus bonus EXP from finished weekly quests and earned badges.
 function totalExp(scored) {
-  return scored.reduce((sum, c) => sum + c.exp, 0) + questExp(scored);
+  return scored.reduce((sum, c) => sum + c.exp, 0) + questExp(scored) + badgeExp(scored);
 }
 
 function renderAll() {
@@ -264,9 +268,9 @@ function renderHome() {
   if (row) row.addEventListener("click", () => openDetail(row.dataset.id));
 
   const earned = new Set(earnedBadges(state.catches));
-  const next = BADGES.find((b) => !earned.has(b.id));
+  const next = BADGES.find((b) => !earned.has(b.id) && !b.secret);
   $("homeGoal").innerHTML = next
-    ? `<div class="badge-name">${next.name}</div><div class="badge-desc">${next.desc}</div>`
+    ? `<div class="badge-name">${next.name}</div><div class="badge-desc">${next.desc} (+${next.exp} EXP)</div>`
     : `<div class="badge-name">Every badge earned</div><div class="badge-desc">More are coming.</div>`;
 }
 
@@ -400,10 +404,17 @@ function renderStats() {
 
 function renderBadges() {
   const earned = new Set(earnedBadges(state.catches));
-  $("badges").innerHTML = BADGES.map((b) => `
-    <li class="badge ${earned.has(b.id) ? "earned" : ""}">
-      <div class="badge-name">${b.name}</div><div class="badge-desc">${b.desc}</div>
-    </li>`).join("");
+  const count = `<li class="badge-count">${earned.size} of ${BADGES.length} earned</li>`;
+  $("badges").innerHTML = count + BADGES.map((b) => {
+    const got = earned.has(b.id);
+    if (b.secret && !got) {
+      return `<li class="badge secret"><div class="badge-name">Secret badge</div><div class="badge-desc">Keep fishing to find out.</div><div class="badge-exp">+${b.exp} EXP</div></li>`;
+    }
+    return `<li class="badge ${got ? "earned" : ""}">
+      <div class="badge-name">${b.name}${b.secret ? " ★" : ""}</div><div class="badge-desc">${b.desc}</div>
+      <div class="badge-exp">+${b.exp} EXP</div>
+    </li>`;
+  }).join("");
 }
 
 function renderCollection() {

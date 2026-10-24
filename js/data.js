@@ -58,7 +58,8 @@ const LEVEL_TITLES = [
 // Badges. Each test receives the full list of catches and returns true when earned.
 // Badges are worked out from the catch log every time, so nothing extra is saved.
 // The list runs roughly easiest to hardest, because Home shows the first one not yet earned.
-const hasAll = (c, ids) => ids.every((id) => c.some((x) => x.speciesId === id));
+//   species = earned by catching every species listed (no test needed)
+//   secret  = name and description stay hidden until the badge is earned
 const countWhere = (c, f) => c.filter(f).length;
 
 const BADGES = [
@@ -101,40 +102,40 @@ const BADGES = [
     test: (c) => speciesCaught(c).size >= 15 },
   { id: "twenty-species", name: "Naturalist", desc: "Catch 20 different species.",
     test: (c) => speciesCaught(c).size >= 20 },
-  { id: "all-species", name: "Gotta Catch 'Em All", desc: "Catch every species in the app.",
+  { id: "all-species", name: "Gotta Catch 'Em All", secret: true, desc: "Catch every species in the app.",
     test: (c) => speciesCaught(c).size >= SPECIES.filter((s) => s.id !== "other").length },
 
   // Species sets
   { id: "panfish-sweep", name: "Panfish Sweep", desc: "Catch a pumpkinseed, bluegill, rock bass, yellow perch and black crappie.",
-    test: (c) => hasAll(c, ["pumpkinseed", "bluegill", "rock-bass", "yellow-perch", "black-crappie"]) },
+    species: ["pumpkinseed", "bluegill", "rock-bass", "yellow-perch", "black-crappie"] },
   { id: "bass-pair", name: "Bass Pair", desc: "Catch a smallmouth bass and a largemouth bass.",
-    test: (c) => hasAll(c, ["smallmouth-bass", "largemouth-bass"]) },
+    species: ["smallmouth-bass", "largemouth-bass"] },
   { id: "whiskers", name: "Whiskers", desc: "Catch a brown bullhead and a channel catfish.",
-    test: (c) => hasAll(c, ["brown-bullhead", "channel-catfish"]) },
+    species: ["brown-bullhead", "channel-catfish"] },
   { id: "underdogs", name: "Underdogs", desc: "Catch a common carp, freshwater drum and white sucker.",
-    test: (c) => hasAll(c, ["common-carp", "freshwater-drum", "white-sucker"]) },
+    species: ["common-carp", "freshwater-drum", "white-sucker"] },
   { id: "toothy-critters", name: "Toothy Critters", desc: "Catch a northern pike, walleye and muskellunge.",
-    test: (c) => hasAll(c, ["northern-pike", "walleye", "muskellunge"]) },
+    species: ["northern-pike", "walleye", "muskellunge"] },
   { id: "trout-trio", name: "Trout Trio", desc: "Catch a brook, rainbow and brown trout.",
-    test: (c) => hasAll(c, ["brook-trout", "rainbow-trout", "brown-trout"]) },
+    species: ["brook-trout", "rainbow-trout", "brown-trout"] },
   { id: "salmon-slam", name: "Salmon Slam", desc: "Catch a coho, chinook and Atlantic salmon.",
-    test: (c) => hasAll(c, ["coho-salmon", "chinook-salmon", "atlantic-salmon"]) },
+    species: ["coho-salmon", "chinook-salmon", "atlantic-salmon"] },
   { id: "char-family", name: "Char Family", desc: "Catch a brook trout, lake trout and splake.",
-    test: (c) => hasAll(c, ["brook-trout", "lake-trout", "splake"]) },
+    species: ["brook-trout", "lake-trout", "splake"] },
 
   // Single species
   { id: "walleye", name: "Pickerel Pro", desc: "Catch a walleye.",
-    test: (c) => hasAll(c, ["walleye"]) },
+    species: ["walleye"] },
   { id: "pike", name: "Water Wolf", desc: "Catch a northern pike.",
-    test: (c) => hasAll(c, ["northern-pike"]) },
+    species: ["northern-pike"] },
   { id: "lake-trout", name: "Deep Water", desc: "Catch a lake trout.",
-    test: (c) => hasAll(c, ["lake-trout"]) },
+    species: ["lake-trout"] },
   { id: "whitefish", name: "Whitefish Whisperer", desc: "Catch a lake whitefish.",
-    test: (c) => hasAll(c, ["lake-whitefish"]) },
-  { id: "aurora", name: "Northern Lights", desc: "Catch an aurora trout.",
-    test: (c) => hasAll(c, ["aurora-trout"]) },
-  { id: "muskie", name: "Fish of 10,000 Casts", desc: "Catch a muskellunge.",
-    test: (c) => hasAll(c, ["muskellunge"]) },
+    species: ["lake-whitefish"] },
+  { id: "aurora", name: "Northern Lights", secret: true, desc: "Catch an aurora trout.",
+    species: ["aurora-trout"] },
+  { id: "muskie", name: "Fish of 10,000 Casts", secret: true, desc: "Catch a muskellunge.",
+    species: ["muskellunge"] },
   { id: "ten-of-a-kind", name: "Specialist", desc: "Catch 10 of the same species.",
     test: (c) => Object.values(tallyBy(c.filter((x) => x.speciesId !== "other"), (x) => x.speciesId)).some((n) => n >= 10) },
 
@@ -155,11 +156,11 @@ const BADGES = [
   // Size
   { id: "big-one", name: "The Big One", desc: "Catch a fish 1.5x its typical length.",
     test: (c) => c.some((x) => sizeRatio(x) >= 1.5) },
-  { id: "monster", name: "Monster", desc: "Catch a fish twice its typical length.",
+  { id: "monster", name: "Monster", secret: true, desc: "Catch a fish twice its typical length.",
     test: (c) => c.some((x) => sizeRatio(x) >= 2) },
   { id: "fifty-cm", name: "Half Metre", desc: "Catch a fish 50 cm or longer.",
     test: (c) => c.some((x) => x.lengthCm >= 50) },
-  { id: "metre-fish", name: "Metre Fish", desc: "Catch a fish 100 cm or longer.",
+  { id: "metre-fish", name: "Metre Fish", secret: true, desc: "Catch a fish 100 cm or longer.",
     test: (c) => c.some((x) => x.lengthCm >= 100) },
   { id: "five-kg", name: "Heavyweight", desc: "Catch a fish 5 kg (11 lb) or heavier.",
     test: (c) => c.some((x) => x.weightKg >= 5) },
@@ -175,7 +176,7 @@ const BADGES = [
     test: (c) => Object.values(groupByDay(c)).some((d) => d.length >= 5) },
   { id: "ten-in-a-day", name: "Hot Bite", desc: "Catch 10 fish in one day.",
     test: (c) => Object.values(groupByDay(c)).some((d) => d.length >= 10) },
-  { id: "twenty-in-a-day", name: "On Fire", desc: "Catch 20 fish in one day.",
+  { id: "twenty-in-a-day", name: "On Fire", secret: true, desc: "Catch 20 fish in one day.",
     test: (c) => Object.values(groupByDay(c)).some((d) => d.length >= 20) },
 
   // Time of day
@@ -183,15 +184,15 @@ const BADGES = [
     test: (c) => c.some((x) => new Date(x.caughtAt).getHours() < 7) },
   { id: "night-owl", name: "Night Owl", desc: "Catch a fish after 9 PM.",
     test: (c) => c.some((x) => new Date(x.caughtAt).getHours() >= 21) },
-  { id: "lunch-break", name: "Lunch Break", desc: "Catch a fish between noon and 1 PM.",
+  { id: "lunch-break", name: "Lunch Break", secret: true, desc: "Catch a fish between noon and 1 PM.",
     test: (c) => c.some((x) => new Date(x.caughtAt).getHours() === 12) },
-  { id: "graveyard-shift", name: "Graveyard Shift", desc: "Catch a fish between midnight and 4 AM.",
+  { id: "graveyard-shift", name: "Graveyard Shift", secret: true, desc: "Catch a fish between midnight and 4 AM.",
     test: (c) => c.some((x) => new Date(x.caughtAt).getHours() < 4) },
-  { id: "round-the-clock", name: "Round the Clock", desc: "Catch fish in the morning, afternoon, evening and night.",
+  { id: "round-the-clock", name: "Round the Clock", secret: true, desc: "Catch fish in the morning, afternoon, evening and night.",
     test: (c) => new Set(c.map((x) => partOfDay(new Date(x.caughtAt).getHours()))).size >= 4 },
 
   // Calendar
-  { id: "weekend-warrior", name: "Weekend Warrior", desc: "Catch a fish on both the Saturday and Sunday of one weekend.",
+  { id: "weekend-warrior", name: "Weekend Warrior", secret: true, desc: "Catch a fish on both the Saturday and Sunday of one weekend.",
     test: (c) => {
       const days = new Set(Object.keys(groupByDay(c)));
       return [...days].some((d) => {
@@ -213,7 +214,7 @@ const BADGES = [
     test: (c) => c.some((x) => [11, 0, 1].includes(new Date(x.caughtAt).getMonth())) },
   { id: "four-seasons", name: "Four Seasons", desc: "Catch a fish in winter, spring, summer and fall.",
     test: (c) => new Set(c.map((x) => Math.floor(((new Date(x.caughtAt).getMonth() + 1) % 12) / 3))).size >= 4 },
-  { id: "year-round", name: "Year-Rounder", desc: "Catch a fish in all 12 months.",
+  { id: "year-round", name: "Year-Rounder", secret: true, desc: "Catch a fish in all 12 months.",
     test: (c) => new Set(c.map((x) => new Date(x.caughtAt).getMonth())).size >= 12 },
 
   // Places (needs location turned on when logging)
@@ -227,9 +228,29 @@ const BADGES = [
   // Notes
   { id: "five-baits", name: "Tinkerer", desc: "Catch fish on 5 different baits or lures.",
     test: (c) => new Set(c.map((x) => (x.bait || "").trim().toLowerCase()).filter(Boolean)).size >= 5 },
-  { id: "journal", name: "Journal Keeper", desc: "Write notes on 10 catches.",
+  { id: "journal", name: "Journal Keeper", secret: true, desc: "Write notes on 10 catches.",
     test: (c) => countWhere(c, (x) => (x.notes || "").trim()) >= 10 },
 ];
+
+// Bonus EXP for each badge, by tier. Harder badges give more, and secret badges give 50% extra.
+const BADGE_TIER_EXP = { 1: 25, 2: 50, 3: 100, 4: 250, 5: 500, 6: 1000 };
+const BADGE_TIERS = {
+  1: ["first-catch", "first-release", "say-cheese", "tape-measure", "on-the-scale", "three-species", "five-catches", "early-bird", "night-owl"],
+  2: ["ten-catches", "five-species", "bass-pair", "walleye", "pike", "trio", "five-in-a-day", "lunch-break", "cold-hands", "streak-three", "three-spots", "five-baits", "big-one", "fifty-cm"],
+  3: ["twenty-five-catches", "fifty-catches", "ten-species", "panfish-sweep", "whiskers", "underdogs", "trout-trio", "lake-trout", "whitefish", "ten-of-a-kind", "release-ten", "proof-ten", "five-kg", "measure-twenty-five", "five-species-day", "ten-in-a-day", "graveyard-shift", "round-the-clock", "weekend-warrior", "ten-days", "four-seasons", "ten-spots", "journal"],
+  4: ["hundred-catches", "fifteen-species", "toothy-critters", "salmon-slam", "char-family", "release-fifty", "photo-fifty", "monster", "streak-seven", "twenty-in-a-day"],
+  5: ["two-fifty-catches", "twenty-species", "aurora", "muskie", "release-hundred", "metre-fish", "fifty-days", "year-round", "twenty-five-spots"],
+  6: ["five-hundred-catches", "all-species"],
+};
+Object.entries(BADGE_TIERS).forEach(([tier, ids]) => ids.forEach((id) => {
+  const b = BADGES.find((x) => x.id === id);
+  b.exp = Math.round(BADGE_TIER_EXP[tier] * (b.secret ? 1.5 : 1));
+}));
+
+// Species badges are earned by catching every species in their list.
+BADGES.forEach((b) => {
+  if (b.species) b.test = (c) => b.species.every((id) => c.some((x) => x.speciesId === id));
+});
 
 function speciesCaught(catches) {
   return new Set(catches.filter((x) => x.speciesId !== "other").map((x) => x.speciesId));

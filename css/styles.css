@@ -145,6 +145,9 @@ button, .btn-like {
 .badge.earned { opacity: 1; border-color: var(--accent); }
 .badge-name { font-weight: 800; }
 .badge-desc { color: var(--muted); font-size: 0.8rem; }
+.badge.secret { border-style: dashed; }
+.badge-exp { color: var(--accent); font-size: 0.75rem; font-weight: 700; margin-top: 2px; }
+.badge-count { grid-column: 1 / -1; color: var(--muted); font-size: 0.85rem; }
 
 .collection li {
   display: flex; justify-content: space-between; gap: 8px;

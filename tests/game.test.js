@@ -124,3 +124,22 @@ test("seasons and baits", () => {
   assert.ok(b.includes("four-seasons") && b.includes("cold-hands"));
   assert.ok(!b.includes("five-baits")); // "Worm" and "worm " are the same bait
 });
+
+test("species badges only name fish that are in the species list", () => {
+  const missing = run(`BADGES.filter((b) => b.species).flatMap((b) => b.species.filter((id) => !SPECIES.some((s) => s.id === id)).map((id) => b.id + ": " + id))`);
+  assert.deepStrictEqual([...missing], []);
+});
+
+test("some badges are secret, but not the first one", () => {
+  assert.ok(run("BADGES.filter((b) => b.secret).length") >= 10);
+  assert.ok(!run("BADGES[0].secret"));
+});
+
+test("every badge gives EXP, and secret badges give more than their tier", () => {
+  assert.ok(run("BADGES.every((b) => b.exp > 0)"));
+  assert.strictEqual(run('BADGES.find((b) => b.id === "first-catch").exp'), 25);
+  assert.strictEqual(run('BADGES.find((b) => b.id === "muskie").exp'), 750); // tier 5, secret
+  ctx.list = [fish({ speciesId: "walleye", caughtAt: "2026-10-24T12:00:00" })];
+  // First Fish 25 + Say Cheese 25 + Pickerel Pro 50 + Lunch Break (secret) 75
+  assert.strictEqual(run("badgeExp(list)"), 175);
+});
