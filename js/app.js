@@ -11,6 +11,7 @@ let state = { catches: [], scored: [], location: null, photoBlob: null };
 // ---------- Startup ----------
 
 document.addEventListener("DOMContentLoaded", async () => {
+  startIntro();
   fillSpeciesSelect();
   resetForm();
   bindEvents();
@@ -39,12 +40,48 @@ function bindEvents() {
   $("importFile").addEventListener("change", importBackup);
   $("clearBtn").addEventListener("click", clearEverything);
   $("levelUpClose").addEventListener("click", () => $("levelUp").close());
+  $("replayIntro").addEventListener("click", playIntro);
+  document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => showView(b.dataset.go)));
+}
+
+// ---------- Intro ----------
+// "Vanderholst Studios presents", then the app name. Plays on every launch; tap to skip.
+
+const INTRO_MS = 3700;
+let introTimer = 0;
+
+function startIntro() {
+  $("intro").addEventListener("click", endIntro);
+  introTimer = setTimeout(endIntro, introLength());
+}
+
+function introLength() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 900 : INTRO_MS;
+}
+
+function endIntro() {
+  const intro = $("intro");
+  if (intro.classList.contains("out")) return;
+  clearTimeout(introTimer);
+  intro.classList.add("out");
+  setTimeout(() => { intro.hidden = true; }, 450);
+}
+
+function playIntro() {
+  const intro = $("intro");
+  intro.hidden = false;
+  intro.classList.remove("out", "play");
+  void intro.offsetWidth; // restart the CSS animation
+  intro.classList.add("play");
+  clearTimeout(introTimer);
+  introTimer = setTimeout(endIntro, introLength());
 }
 
 function showView(name) {
   document.querySelectorAll(".view").forEach((v) => v.classList.toggle("active", v.id === `view-${name}`));
   document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("active", b.dataset.view === name));
   window.scrollTo(0, 0);
+  if (name === "map") MapView.show();
 }
 
 async function reload() {
@@ -177,14 +214,41 @@ function totalExp(scored) {
 function renderAll() {
   const lv = levelFromExp(totalExp(state.scored));
   $("miniLevel").textContent = `Lv ${lv.level}`;
-  $("levelNum").textContent = lv.level;
-  $("levelTitle").textContent = lv.title;
-  $("levelFill").style.width = `${Math.round(lv.progress * 100)}%`;
-  $("levelExp").textContent = `${lv.intoLevel} / ${lv.need} EXP to level ${lv.level + 1}`;
+  ["", "home"].forEach((p) => {
+    const id = (k) => (p ? p + k : k.charAt(0).toLowerCase() + k.slice(1));
+    $(id("LevelNum")).textContent = lv.level;
+    $(id("LevelTitle")).textContent = lv.title;
+    $(id("LevelFill")).style.width = `${Math.round(lv.progress * 100)}%`;
+    $(id("LevelExp")).textContent = `${lv.intoLevel} / ${lv.need} EXP to level ${lv.level + 1}`;
+  });
+  renderHome();
   renderCatchList();
   renderStats();
   renderBadges();
   renderCollection();
+}
+
+function renderHome() {
+  const hour = new Date().getHours();
+  $("home-h").textContent = hour < 12 ? "Morning bite's on." : hour < 18 ? "Tight lines, angler." : "Evening bite's on.";
+
+  const latest = state.scored[state.scored.length - 1];
+  $("homeLatest").innerHTML = latest
+    ? `<button class="catch-row" data-id="${latest.id}">
+        <span class="catch-main">
+          <span class="catch-name">${esc(speciesById(latest.speciesId).name)}</span>
+          <span class="catch-meta">${fmtDate(latest.caughtAt)}${latest.lengthCm ? " · " + latest.lengthCm + " cm" : ""}</span>
+        </span>
+        <span class="catch-exp">+${latest.exp}</span></button>`
+    : `<p class="empty small">Nothing yet. Your first catch earns the First Fish badge.</p>`;
+  const row = $("homeLatest").querySelector(".catch-row");
+  if (row) row.addEventListener("click", () => openDetail(row.dataset.id));
+
+  const earned = new Set(earnedBadges(state.catches));
+  const next = BADGES.find((b) => !earned.has(b.id));
+  $("homeGoal").innerHTML = next
+    ? `<div class="badge-name">${next.name}</div><div class="badge-desc">${next.desc}</div>`
+    : `<div class="badge-name">Every badge earned</div><div class="badge-desc">More are coming.</div>`;
 }
 
 async function renderCatchList() {

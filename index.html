@@ -9,17 +9,78 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+  <!-- Intro: plays on every launch, tap to skip -->
+  <div id="intro" class="play" aria-hidden="true">
+    <div class="intro-studio"><span>Vanderholst Studios</span><small>presents</small></div>
+    <div class="intro-app"><img src="icons/icon-192.png" alt=""><b><span>Creeked</span> Up</b></div>
+    <div class="intro-skip">Tap to skip</div>
+  </div>
+
   <header class="top">
     <div class="brand">Creeked Up</div>
     <div class="mini-level" id="miniLevel"></div>
   </header>
 
   <main>
+    <!-- Home -->
+    <section id="view-home" class="view active" aria-labelledby="home-h">
+      <h1 id="home-h" class="home-hello">Tight lines, angler.</h1>
+      <button type="button" class="card level-card home-level" data-go="profile">
+        <div class="level-num" id="homeLevelNum">1</div>
+        <div class="level-info">
+          <div class="level-title" id="homeLevelTitle"></div>
+          <div class="bar"><div class="fill" id="homeLevelFill"></div></div>
+          <div class="level-exp" id="homeLevelExp"></div>
+        </div>
+      </button>
+      <div class="home-actions">
+        <button type="button" class="primary big" data-go="log">Log a catch</button>
+        <button type="button" class="ghost big" data-go="map">Find spots</button>
+      </div>
+      <h2>Latest catch</h2>
+      <div id="homeLatest" class="home-latest"></div>
+      <h2>Next goal</h2>
+      <div id="homeGoal" class="card home-goal"></div>
+      <p class="hint home-regs">Before you go, check the season and limits for your zone in the
+        <a href="https://www.ontario.ca/document/ontario-fishing-regulations-summary" target="_blank" rel="noopener">Ontario Fishing Regulations Summary</a>.</p>
+    </section>
+
+    <!-- Hotspot map -->
+    <section id="view-map" class="view" aria-labelledby="map-h">
+      <h1 id="map-h">Find spots</h1>
+      <div class="map-controls">
+        <label class="grow">Fishing for
+          <select id="mapSpecies"></select>
+        </label>
+        <label>Within
+          <select id="mapRadius">
+            <option value="25">25 km</option>
+            <option value="50" selected>50 km</option>
+            <option value="100">100 km</option>
+          </select>
+        </label>
+      </div>
+      <button type="button" class="primary" id="mapSearch">Search near me</button>
+      <p class="hint" id="mapStatus">Pick a fish, then search. Your location is used only on this phone.</p>
+      <div id="map" class="map" role="region" aria-label="Map of suggested spots"></div>
+      <div id="mapTip" class="card map-tip" hidden></div>
+      <ol class="spot-list" id="spotList"></ol>
+      <p class="hint map-source">
+        Spots come from Ontario's public
+        <a href="https://data.ontario.ca/dataset/fish-stocking" target="_blank" rel="noopener">fish stocking records</a>
+        (Open Government Licence – Ontario). Stocked means fish were put there, not that they're biting.
+        Bass, pike, perch and muskie aren't stocked, so they aren't on the map yet.
+        Your own catches show as orange dots and stay private on this phone.
+        Always check that the shore is public before you fish it.
+      </p>
+    </section>
+
     <!-- Log a catch -->
-    <section id="view-log" class="view active" aria-labelledby="log-h">
+    <section id="view-log" class="view" aria-labelledby="log-h">
       <h1 id="log-h">Log a catch</h1>
       <form id="catchForm" autocomplete="off">
         <label class="photo-pick" id="photoPick">
@@ -116,11 +177,16 @@
         <label class="ghost btn-like">Import backup<input type="file" id="importFile" accept="application/json" hidden></label>
         <button type="button" class="danger" id="clearBtn">Delete everything</button>
       </div>
+      <div class="data-btns">
+        <button type="button" class="ghost" id="replayIntro">Replay the intro</button>
+      </div>
     </section>
   </main>
 
   <nav class="tabs" aria-label="Main">
-    <button data-view="log" class="active">Log</button>
+    <button data-view="home" class="active">Home</button>
+    <button data-view="log">Log</button>
+    <button data-view="map">Map</button>
     <button data-view="catches">Catches</button>
     <button data-view="profile">Profile</button>
   </nav>
@@ -138,9 +204,12 @@
     </div>
   </dialog>
 
+  <script src="vendor/leaflet/leaflet.js"></script>
   <script src="js/data.js"></script>
   <script src="js/game.js"></script>
   <script src="js/db.js"></script>
+  <script src="js/spots.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/mapview.js"></script>
 </body>
 </html>

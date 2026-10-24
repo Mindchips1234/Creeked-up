@@ -6,6 +6,9 @@ This first version is a **mobile web app**. It runs in the browser on iPhone and
 
 ## What it does now
 
+- **Intro:** "Vanderholst Studios presents" plays at launch. Tap to skip, or replay it from Profile.
+- **Home:** your level, quick buttons, your latest catch, your next badge goal, and a link to the fishing regulations.
+- **Map (Find spots):** pick a fish and a distance. It ranks nearby lakes and rivers by how recently and how many of that fish Ontario stocked there, using the province's public [fish stocking records](https://data.ontario.ca/dataset/fish-stocking). It also shows a starting tackle tip, directions, and your own catches as orange dots. Results are saved for a week so they work offline.
 - **Log a catch:** photo from the camera, species, length, weight, time, GPS, bait or lure, kept or released, and notes.
 - **EXP per fish:** based on species, size, first-of-species bonus, a release bonus, and proof (photo and GPS).
 - **Levels:** each level unlocks a new title.
@@ -39,7 +42,10 @@ The typical lengths and base EXP are set in `js/data.js`. **The typical lengths 
 
 - Data lives in the phone's browser. If you clear your browser data or switch phones, it's gone unless you exported a backup.
 - The camera button opens your camera on most phones. Some phones also let you pick a gallery photo, so this doesn't stop old photos from being used yet.
-- There's no fish scan, map, accounts, or leaderboards yet. Those are the next phases.
+- The map only covers the 12 species Ontario stocks (trout, salmon, walleye, splake, whitefish, bluegill). Bass, pike, perch and muskie aren't stocked, so they can't be suggested yet.
+- Stocked means fish were put there, not that they're biting or that the shore is public.
+- The tackle tips are general starting points, not expert or official advice.
+- There's no fish scan, accounts, or leaderboards yet.
 - Always check the [Ontario Fishing Regulations Summary](https://www.ontario.ca/document/ontario-fishing-regulations-summary) before keeping a fish.
 
 ## For developers
