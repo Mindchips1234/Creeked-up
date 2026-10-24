@@ -76,6 +76,9 @@
           </select>
         </label>
       </div>
+      <label class="map-method">How you'll fish
+        <select id="mapMethod"></select>
+      </label>
       <button type="button" class="primary" id="mapSearch">Search near me</button>
       <p class="hint" id="mapStatus">Pick a fish, then search. Your location is used only on this phone.</p>
       <div id="map" class="map" role="region" aria-label="Map of suggested spots"></div>
@@ -139,6 +142,11 @@
           <button type="button" class="ghost" id="locBtn">Add my location</button>
         </div>
 
+        <fieldset class="method-pick">
+          <legend>How did you catch it? <button type="button" class="link-btn" data-guide>What are these?</button></legend>
+          <div class="chips" id="methodChips"></div>
+        </fieldset>
+
         <label>Bait or lure (optional)
           <input type="text" id="bait" list="tackleList" placeholder="e.g. worm, white spinnerbait">
           <datalist id="tackleList"></datalist>
@@ -165,6 +173,9 @@
     <!-- Catch history -->
     <section id="view-catches" class="view" aria-labelledby="catches-h">
       <h1 id="catches-h">My catches</h1>
+      <label class="catch-filter">Show
+        <select id="catchMethod"></select>
+      </label>
       <ul class="catch-list" id="catchList"></ul>
       <p class="empty" id="catchEmpty">No catches yet. Go fishing!</p>
     </section>
@@ -190,10 +201,11 @@
       <ul class="collection" id="collection"></ul>
 
       <h2>Tackle box</h2>
-      <p class="hint">Add your lures and baits. They show up when you log a catch, and the app tracks which ones catch the most.</p>
+      <p class="hint">Add your lures and baits, and which way of fishing they're for. They show up when you log a catch with that method, and the app tracks which ones catch the most.</p>
       <form id="tackleForm" class="tackle-form">
         <input type="text" id="tackleName" placeholder="e.g. Silver spoon" required>
         <select id="tackleType"></select>
+        <select id="tackleMethod" aria-label="Fishing method"></select>
         <button type="submit" class="primary">Add</button>
       </form>
       <ul class="tackle-list" id="tackleListUi"></ul>
@@ -233,6 +245,15 @@
       <div class="detail-btns"><span></span><button type="button" class="primary" id="idClose">Close</button></div>
     </div>
   </dialog>
+  <dialog id="methodDlg" aria-labelledby="methodTitle">
+    <div class="detail-inner">
+      <h2 id="methodTitle">Ways to fish</h2>
+      <div id="methodGuide"></div>
+      <p class="tip-note">Beginner basics, summarized from the sources linked under each method. Always check the
+        <a href="https://www.ontario.ca/document/ontario-fishing-regulations-summary" target="_blank" rel="noopener">Ontario Fishing Regulations Summary</a> for your zone.</p>
+      <div class="detail-btns"><span></span><button type="button" class="primary" id="methodClose">Close</button></div>
+    </div>
+  </dialog>
   <dialog id="levelUp">
     <div class="levelup-inner">
       <div class="levelup-kicker">Level up!</div>
@@ -252,6 +273,7 @@
   <script src="js/quests.js"></script>
   <script src="js/idguide.js"></script>
   <script src="js/conditions.js"></script>
+  <script src="js/methods.js"></script>
   <script src="js/tackle.js"></script>
   <script src="js/share.js"></script>
   <script src="js/app.js"></script>

@@ -1,5 +1,5 @@
 // The Map tab: suggested spots from stocking records, plus your own catches.
-// Depends on Leaflet (vendor/leaflet), spots.js and app.js (state, $, esc, toast, speciesById).
+// Depends on Leaflet (vendor/leaflet), spots.js, methods.js and app.js (state, $, esc, toast, speciesById).
 
 const ONTARIO_CENTER = [45.0, -79.4];
 const MAX_SPOTS = 25;
@@ -17,6 +17,10 @@ const MapView = (() => {
     sel.innerHTML = STOCKED.map((s) => `<option value="${esc(s.name)}">${esc(s.name)}</option>`).join("");
     $("mapSearch").addEventListener("click", search);
     sel.addEventListener("change", () => { showTip(); drawCatches(); });
+    $("mapMethod").innerHTML = `<option value="">Any method</option>` +
+      METHODS.filter((m) => m.id !== "other").map((m) => `<option value="${m.id}">${esc(m.name)}</option>`).join("");
+    $("mapMethod").value = MethodPref.get() === "other" ? "" : MethodPref.get();
+    $("mapMethod").addEventListener("change", showTip);
 
     map = L.map("map", { zoomControl: true }).setView(ONTARIO_CENTER, 6);
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -40,14 +44,20 @@ const MapView = (() => {
 
   function showTip() {
     const s = selected();
+    const m = methodById($("mapMethod").value);
+    const best = bestBaits(state.catches, s.id, m ? m.id : "")[0];
+    const suits = m && methodSuits(m.id, s.id);
+    const usual = METHODS.filter((x) => methodSuits(x.id, s.id)).map((x) => x.name);
     $("mapTip").hidden = false;
     $("mapTip").innerHTML = `<div class="badge-name">How to start with ${esc(s.name)}</div>
       <div class="badge-desc">${esc(s.tip)}</div>
-      ${(() => {
-        const best = bestBaits(state.catches, s.id)[0];
-        return best ? `<div class="badge-desc"><b>Your best so far:</b> ${esc(best.name)} (${best.n} fish)</div>` : "";
-      })()}
-      <div class="tip-note">General tips, not expert or official advice.</div>`;
+      ${m ? `<div class="badge-desc"><b>${esc(m.name)}:</b> ${esc(m.how)} ${m.gear ? esc(m.gear) : ""}</div>
+        <div class="badge-desc">${suits
+          ? `Ontario's Learn to Fish guide names this method for ${esc(s.name)}.`
+          : `Ontario's Learn to Fish guide doesn't name this method for ${esc(s.name)}. It may still work.${usual.length ? ` Methods it does name: ${esc(usual.join(", "))}.` : ""}`}</div>
+        ${m.rule ? `<div class="badge-desc"><b>Rules and safety:</b> ${esc(m.rule)}</div>` : ""}` : ""}
+      ${best ? `<div class="badge-desc"><b>Your best${m ? ` with ${esc(m.name.toLowerCase())}` : ""} so far:</b> ${esc(best.name)} (${best.n} fish)</div>` : ""}
+      <div class="tip-note">General tips, not expert or official advice.${m && m.sources.length ? ` Method info: ${methodSourceLinks(m)}.` : ""}</div>`;
   }
 
   // Your own catches, as orange dots. Only catches of the selected fish are shown.

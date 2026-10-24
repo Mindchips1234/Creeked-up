@@ -2,7 +2,7 @@
 // you used, so the app can show what has worked best for you.
 
 const TACKLE_KEY = "creeked-up:tackle";
-const TACKLE_TYPES = ["Lure", "Bait", "Fly", "Rod", "Reel", "Line"];
+const TACKLE_TYPES = ["Lure", "Bait", "Fly", "Jig", "Float", "Sinker", "Rod", "Reel", "Line"];
 
 const Tackle = {
   all() {
@@ -11,10 +11,11 @@ const Tackle = {
   save(items) {
     try { localStorage.setItem(TACKLE_KEY, JSON.stringify(items)); } catch { /* storage blocked */ }
   },
-  add(name, type) {
+  // method is optional: the fishing method this item is for (see methods.js), or "" for any.
+  add(name, type, method = "") {
     const items = Tackle.all();
     if (items.some((t) => t.name.toLowerCase() === name.toLowerCase())) return items;
-    items.push({ id: String(Date.now()) + Math.random().toString(36).slice(2, 6), name, type });
+    items.push({ id: String(Date.now()) + Math.random().toString(36).slice(2, 6), name, type, method });
     Tackle.save(items);
     return items;
   },
@@ -24,10 +25,11 @@ const Tackle = {
 };
 
 // The baits or lures you've caught the most of a species on, best first.
-function bestBaits(catches, speciesId) {
+// Pass a method to count only catches made with that method.
+function bestBaits(catches, speciesId, method) {
   const counts = {};
   catches
-    .filter((c) => c.bait && (!speciesId || c.speciesId === speciesId))
+    .filter((c) => c.bait && (!speciesId || c.speciesId === speciesId) && (!method || c.method === method))
     .forEach((c) => {
       const k = c.bait.trim().toLowerCase();
       (counts[k] = counts[k] || { name: c.bait.trim(), n: 0 }).n += 1;
