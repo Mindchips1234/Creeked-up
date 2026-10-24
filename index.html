@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f3d3e">
+  <meta name="description" content="Creeked Up: a real-life fishing game. Log your catches, earn EXP and level up.">
+  <title>Creeked Up</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">Creeked Up</div>
+    <div class="mini-level" id="miniLevel"></div>
+  </header>
+
+  <main>
+    <!-- Log a catch -->
+    <section id="view-log" class="view active" aria-labelledby="log-h">
+      <h1 id="log-h">Log a catch</h1>
+      <form id="catchForm" autocomplete="off">
+        <label class="photo-pick" id="photoPick">
+          <input type="file" id="photo" accept="image/*" capture="environment" hidden>
+          <img id="photoPreview" alt="" hidden>
+          <span id="photoHint">Tap to take a photo of your fish</span>
+        </label>
+        <p class="hint">Photo and GPS each raise your EXP. A catch with both earns full EXP.</p>
+
+        <label>Species
+          <select id="species" required></select>
+        </label>
+
+        <div class="row">
+          <label class="grow">Length
+            <input type="number" id="length" inputmode="decimal" min="0" step="0.1" placeholder="e.g. 42">
+          </label>
+          <label>Unit
+            <select id="lengthUnit"><option value="cm">cm</option><option value="in">in</option></select>
+          </label>
+        </div>
+
+        <div class="row">
+          <label class="grow">Weight (optional)
+            <input type="number" id="weight" inputmode="decimal" min="0" step="0.01" placeholder="e.g. 1.2">
+          </label>
+          <label>Unit
+            <select id="weightUnit"><option value="kg">kg</option><option value="lb">lb</option></select>
+          </label>
+        </div>
+
+        <label>When
+          <input type="datetime-local" id="caughtAt" required>
+        </label>
+
+        <div class="loc">
+          <span id="locStatus">Location not added</span>
+          <button type="button" class="ghost" id="locBtn">Add my location</button>
+        </div>
+
+        <label>Bait or lure (optional)
+          <input type="text" id="bait" placeholder="e.g. worm, white spinnerbait">
+        </label>
+
+        <fieldset class="seg">
+          <legend>Kept or released?</legend>
+          <label><input type="radio" name="fate" value="released" checked> Released</label>
+          <label><input type="radio" name="fate" value="kept"> Kept</label>
+        </fieldset>
+        <p class="warn" id="keptWarn" hidden>
+          Check the season, size and catch limits for your zone before keeping a fish:
+          <a href="https://www.ontario.ca/document/ontario-fishing-regulations-summary" target="_blank" rel="noopener">Ontario Fishing Regulations Summary</a>.
+        </p>
+
+        <label>Notes (optional)
+          <textarea id="notes" rows="2" placeholder="Water, weather, anything you want to remember"></textarea>
+        </label>
+
+        <button type="submit" class="primary">Save catch</button>
+      </form>
+    </section>
+
+    <!-- Catch history -->
+    <section id="view-catches" class="view" aria-labelledby="catches-h">
+      <h1 id="catches-h">My catches</h1>
+      <ul class="catch-list" id="catchList"></ul>
+      <p class="empty" id="catchEmpty">No catches yet. Go fishing!</p>
+    </section>
+
+    <!-- Profile: level, badges, species, stats -->
+    <section id="view-profile" class="view" aria-labelledby="profile-h">
+      <h1 id="profile-h">Profile</h1>
+      <div class="card level-card">
+        <div class="level-num" id="levelNum">1</div>
+        <div class="level-info">
+          <div class="level-title" id="levelTitle"></div>
+          <div class="bar"><div class="fill" id="levelFill"></div></div>
+          <div class="level-exp" id="levelExp"></div>
+        </div>
+      </div>
+
+      <div class="stats" id="stats"></div>
+
+      <h2>Badges</h2>
+      <ul class="badges" id="badges"></ul>
+
+      <h2>Species collection</h2>
+      <ul class="collection" id="collection"></ul>
+
+      <h2>Your data</h2>
+      <p class="hint">Your catches are saved only on this phone. Export a backup now and then so you don't lose them.</p>
+      <div class="data-btns">
+        <button type="button" class="ghost" id="exportBtn">Export backup</button>
+        <label class="ghost btn-like">Import backup<input type="file" id="importFile" accept="application/json" hidden></label>
+        <button type="button" class="danger" id="clearBtn">Delete everything</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabs" aria-label="Main">
+    <button data-view="log" class="active">Log</button>
+    <button data-view="catches">Catches</button>
+    <button data-view="profile">Profile</button>
+  </nav>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <dialog id="detail"></dialog>
+  <dialog id="levelUp">
+    <div class="levelup-inner">
+      <div class="levelup-kicker">Level up!</div>
+      <div class="levelup-num" id="levelUpNum"></div>
+      <div class="levelup-title" id="levelUpTitle"></div>
+      <p>New title unlocked.</p>
+      <button type="button" class="primary" id="levelUpClose">Nice</button>
+    </div>
+  </dialog>
+
+  <script src="js/data.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
