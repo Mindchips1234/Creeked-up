@@ -71,6 +71,12 @@ function earnedBadges(catches) {
   return BADGES.filter((b) => b.test(catches)).map((b) => b.id);
 }
 
+// Bonus EXP from every badge earned so far.
+function badgeExp(catches) {
+  const earned = new Set(earnedBadges(catches));
+  return BADGES.filter((b) => earned.has(b.id)).reduce((sum, b) => sum + b.exp, 0);
+}
+
 if (typeof module !== "undefined") {
-  module.exports = { photoCounts, trustMultiplier, sizeMultiplier, scoreCatches, expForNextLevel, levelFromExp, earnedBadges };
+  module.exports = { photoCounts, trustMultiplier, sizeMultiplier, scoreCatches, expForNextLevel, levelFromExp, earnedBadges, badgeExp };
 }
