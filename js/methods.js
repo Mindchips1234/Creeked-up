@@ -46,7 +46,7 @@ const METHODS = [
     how: "Pull a lure slowly behind a moving boat to cover lots of water. Deep fish like lake trout and salmon need special gear to get the lure down to them.",
     gear: "A boat, a sturdy rod, and spoons, plugs or spinners.",
     rule: "In open water you may use only 1 line. On the Great Lakes you can use 2 lines from a boat, with some exceptions.",
-    goodFor: ["northern-pike", "lake-trout", "chinook-salmon", "coho-salmon"],
+    goodFor: ["northern-pike", "chinook-salmon", "coho-salmon"], // lake trout left out: not found in Zone 17
     sources: ["LEARN", "RULES"] },
   { id: "ice", name: "Ice fishing", short: "Fish through a hole in the ice",
     how: "Fish through a hole in the ice, usually by jigging or with a tip-up. Check the ice before you walk on it: blue ice is strongest and grey ice is unsafe.",
