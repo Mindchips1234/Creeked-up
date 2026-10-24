@@ -1,5 +1,5 @@
 // Creeked Up: the screens and what happens when you tap things.
-// Depends on data.js, game.js and db.js.
+// Depends on data.js, game.js, db.js and cloud.js. Accounts and friends screens are in account.js.
 
 const $ = (id) => document.getElementById(id);
 const IN_TO_CM = 2.54;
@@ -17,7 +17,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupMethods();
   resetForm();
   bindEvents();
+  setupAccount();
   await reload();
+  Cloud.init({
+    onData: reload,
+    onStatus: renderAccount,
+    summary: () => buildSummary(state.scored, totalExp(state.scored)),
+  });
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 });
 
@@ -55,6 +61,7 @@ function bindEvents() {
     Tackle.add(name, $("tackleType").value, $("tackleMethod").value);
     $("tackleName").value = "";
     renderTackle();
+    Cloud.requestSync();
   });
   document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => showView(b.dataset.go)));
 }
@@ -97,6 +104,7 @@ function showView(name) {
   document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("active", b.dataset.view === name));
   window.scrollTo(0, 0);
   if (name === "map") MapView.show();
+  if (name === "friends") renderFriends();
 }
 
 async function reload() {
@@ -189,11 +197,11 @@ function photoFitsCatch(photo, caughtAt) {
 }
 
 // Photos are resized so they don't fill up the phone's storage.
-function shrinkImage(file) {
+function shrinkImage(file, maxPx = MAX_PHOTO_PX) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
-      const scale = Math.min(1, MAX_PHOTO_PX / Math.max(img.width, img.height));
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
       const canvas = document.createElement("canvas");
       canvas.width = Math.round(img.width * scale);
       canvas.height = Math.round(img.height * scale);
@@ -266,6 +274,7 @@ async function onSave(e) {
   if (state.photoBlob) await Store.putPhoto(id, state.photoBlob);
   await Store.putCatch(c);
   await reload();
+  Cloud.requestSync();
 
   const saved = state.scored.find((x) => x.id === id);
   const after = levelFromExp(totalExp(state.scored));
@@ -406,6 +415,7 @@ function renderTackle() {
   $("tackleListUi").querySelectorAll("[data-del]").forEach((b) => b.addEventListener("click", () => {
     Tackle.remove(b.dataset.del);
     renderTackle();
+    Cloud.requestSync();
   }));
 }
 
@@ -500,7 +510,7 @@ async function renderCatchList() {
   list.querySelectorAll(".catch-row").forEach((b) => b.addEventListener("click", () => openDetail(b.dataset.id)));
   for (const el of list.querySelectorAll(".thumb[data-photo]")) {
     if (!el.dataset.photo) continue;
-    const blob = await Store.getPhoto(el.dataset.photo);
+    const blob = await photoFor(state.catches.find((x) => x.id === el.dataset.photo));
     if (blob) el.style.backgroundImage = `url(${URL.createObjectURL(blob)})`;
   }
 }
@@ -554,7 +564,7 @@ async function openDetail(id) {
   const c = state.scored.find((x) => x.id === id);
   if (!c) return;
   const p = c.expParts;
-  const blob = c.hasPhoto ? await Store.getPhoto(id) : null;
+  const blob = await photoFor(c);
   const d = $("detail");
   d.innerHTML = `
     <div class="detail-inner">
@@ -567,7 +577,7 @@ async function openDetail(id) {
         ${methodById(c.method) ? `<dt>Method</dt><dd>${esc(methodById(c.method).name)}</dd>` : ""}
         ${c.bait ? `<dt>Bait or lure</dt><dd>${esc(c.bait)}</dd>` : ""}
         <dt>Kept or released</dt><dd>${c.released ? "Released" : "Kept"}</dd>
-        ${c.lat != null ? `<dt>Location</dt><dd>Saved privately on this phone</dd>` : ""}
+        ${c.lat != null ? `<dt>Location</dt><dd>Saved privately. Friends never see it.</dd>` : ""}
         ${c.notes ? `<dt>Notes</dt><dd>${esc(c.notes)}</dd>` : ""}
       </dl>
       <h3>+${c.exp} EXP</h3>
@@ -593,9 +603,17 @@ async function openDetail(id) {
   $("delBtn").onclick = async () => {
     if (!confirm("Delete this catch? Its EXP will be removed.")) return;
     await Store.deleteCatch(id);
+    Cloud.noteDeleted(id);
     d.close();
     await reload();
+    Cloud.requestSync();
   };
+}
+
+// The catch's photo from this phone, or from the account if it was logged on another phone.
+async function photoFor(c) {
+  if (!c || !c.hasPhoto) return null;
+  return (await Store.getPhoto(c.id)) || (await Cloud.photo(c.id));
 }
 
 // ---------- Backup ----------
@@ -604,10 +622,10 @@ async function exportBackup() {
   const photos = {};
   for (const c of state.catches) {
     if (!c.hasPhoto) continue;
-    const blob = await Store.getPhoto(c.id);
+    const blob = await photoFor(c);
     if (blob) photos[c.id] = await blobToDataUrl(blob);
   }
-  const data = { app: "creeked-up", version: 1, exportedAt: new Date().toISOString(), catches: state.catches, photos, tackle: Tackle.all() };
+  const data = { app: "creeked-up", version: 1, exportedAt: new Date().toISOString(), catches: state.catches.map(cloudCatch), photos, tackle: Tackle.all() };
   const url = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: "application/json" }));
   const a = document.createElement("a");
   a.href = url;
@@ -623,12 +641,14 @@ async function importBackup(e) {
   try {
     const data = JSON.parse(await file.text());
     if (data.app !== "creeked-up" || !Array.isArray(data.catches)) throw new Error("not a backup");
-    for (const c of data.catches) {
+    for (const raw of data.catches) {
+      const c = cloudCatch(raw); // imported catches get uploaded to the account like new ones
       await Store.putCatch(c);
       if (data.photos && data.photos[c.id]) await Store.putPhoto(c.id, await (await fetch(data.photos[c.id])).blob());
     }
     if (Array.isArray(data.tackle)) data.tackle.forEach((t) => Tackle.add(t.name, t.type, t.method || ""));
     await reload();
+    Cloud.requestSync();
     toast(`Imported ${data.catches.length} catches.`);
   } catch {
     toast("That file isn't a Creeked Up backup.");
@@ -636,9 +656,15 @@ async function importBackup(e) {
 }
 
 async function clearEverything() {
-  if (!confirm("Delete ALL catches and photos from this phone? This can't be undone unless you have a backup.")) return;
+  const acct = Cloud.account();
+  const msg = acct
+    ? `Delete ALL catches and photos from this phone AND from @${acct.username}'s account on every device? This can't be undone unless you have a backup.`
+    : "Delete ALL catches and photos from this phone? This can't be undone unless you have a backup.";
+  if (!confirm(msg)) return;
+  if (acct) state.catches.forEach((c) => Cloud.noteDeleted(c.id));
   await Store.clearAll();
   await reload();
+  Cloud.requestSync();
   toast("Everything deleted.");
 }
 
