@@ -143,3 +143,10 @@ test("every badge gives EXP, and secret badges give more than their tier", () =>
   // First Fish 25 + Say Cheese 25 + Pickerel Pro 50 + Lunch Break (secret) 75
   assert.strictEqual(run("badgeExp(list)"), 175);
 });
+
+test("fishing method badges", () => {
+  ctx.list = ["float", "lure", "fly", "other", ""].map((m) => fish({ speciesId: "bluegill", method: m }));
+  const b = run("earnedBadges(list)");
+  for (const id of ["method-float", "method-lure", "method-fly", "three-methods"]) assert.ok(b.includes(id), id);
+  assert.ok(!b.includes("five-methods")); // "other" and blank don't count as methods
+});

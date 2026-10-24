@@ -14,7 +14,8 @@ This first version is a **mobile web app**. It runs in the browser on iPhone and
 - **Fish scan:** tap what you see on the fish (spots, whiskers, a white tail tip and so on) and it ranks the likely species, with the key mark to check for each one.
 - **Tackle box:** save your lures and baits. They show up when you log a catch, and the map shows your best bait for each fish.
 - **Share:** turn any catch into a picture card and share it.
-- **Log a catch:** photo from the camera, species, length, weight, time, GPS, bait or lure, kept or released, and notes.
+- **Log a catch:** photo from the camera or the phone's gallery, species, length, weight, time, GPS, how you caught it, bait or lure, kept or released, and notes.
+- **Ways to fish:** pick how you caught each fish: float, lure, jigging, bottom, fly fishing, trolling, ice fishing or other. The app remembers your last pick. Tap "What are these?" for a beginner guide to each method, with its gear, rules and the fish it's good for. Tackle box items can be tagged with a method, the Catches tab can filter by method, Profile shows your top method, and the map tip changes for the method you pick.
 - **EXP per fish:** based on species, size, first-of-species bonus, a release bonus, and proof (photo and GPS).
 - **Levels:** each level unlocks a new title.
 - **Badges** and a **species collection** with your personal best for each fish.
@@ -31,6 +32,7 @@ EXP = species base × size bonus × first-of-species (×2) × released (×1.1) �
 
 - **Size bonus:** your fish's length compared to a typical length for its species. Smaller fish count for less, but never under ×0.5. Bigger fish count for more, up to ×4.
 - **Proof:** photo and GPS = ×1, one of them = ×0.75, neither = ×0.5.
+- **Gallery photos:** the app reads the date and place saved inside the photo and fills them in. The photo only counts as proof if its date is within 2 days of the catch time, and the same photo can't be logged twice. Screenshots and photos sent through chat apps usually have no date, so they don't count.
 
 The typical lengths and base EXP are set in `js/data.js`. **The typical lengths are rough placeholders** and still need checking against a credible source.
 
@@ -50,6 +52,7 @@ The typical lengths and base EXP are set in `js/data.js`. **The typical lengths 
 - The map only covers the 12 species Ontario stocks (trout, salmon, walleye, splake, whitefish, bluegill). Bass, pike, perch and muskie aren't stocked, so they can't be suggested yet.
 - Stocked means fish were put there, not that they're biting or that the shore is public.
 - The tackle tips are general starting points, not expert or official advice.
+- The method guide is summarized from Ontario's [Learn to fish](https://www.ontario.ca/page/learn-fish-online) course, Ontario's [Rules on using fishing tackle](https://www.ontario.ca/page/rules-using-fishing-tackle) and the Canadian Red Cross ice safety tips. "Good for" only lists fish the Ontario guide names for that method or its bait; a fish missing from the list may still bite. The Ontario guide doesn't cover ice fishing tactics, so ice fishing has no "good for" list yet.
 - Fish scan is a visual guide, not photo AI. There's no free, reliable fish-photo AI to use: iNaturalist's photo-ID service isn't public. Double-check IDs before keeping a fish.
 - Open-Meteo's free plan is for non-commercial use only. If the app ever has ads or subscriptions, weather needs a paid plan.
 - There are no accounts or leaderboards yet.

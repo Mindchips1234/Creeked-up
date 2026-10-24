@@ -112,28 +112,22 @@ const BADGES = [
     species: ["smallmouth-bass", "largemouth-bass"] },
   { id: "whiskers", name: "Whiskers", desc: "Catch a brown bullhead and a channel catfish.",
     species: ["brown-bullhead", "channel-catfish"] },
-  { id: "underdogs", name: "Underdogs", desc: "Catch a common carp, freshwater drum and white sucker.",
-    species: ["common-carp", "freshwater-drum", "white-sucker"] },
+  { id: "underdogs", name: "Underdogs", desc: "Catch a common carp and a white sucker.",
+    species: ["common-carp", "white-sucker"] },
   { id: "toothy-critters", name: "Toothy Critters", desc: "Catch a northern pike, walleye and muskellunge.",
     species: ["northern-pike", "walleye", "muskellunge"] },
   { id: "trout-trio", name: "Trout Trio", desc: "Catch a brook, rainbow and brown trout.",
     species: ["brook-trout", "rainbow-trout", "brown-trout"] },
   { id: "salmon-slam", name: "Salmon Slam", desc: "Catch a coho, chinook and Atlantic salmon.",
     species: ["coho-salmon", "chinook-salmon", "atlantic-salmon"] },
-  { id: "char-family", name: "Char Family", desc: "Catch a brook trout, lake trout and splake.",
-    species: ["brook-trout", "lake-trout", "splake"] },
 
   // Single species
   { id: "walleye", name: "Pickerel Pro", desc: "Catch a walleye.",
     species: ["walleye"] },
   { id: "pike", name: "Water Wolf", desc: "Catch a northern pike.",
     species: ["northern-pike"] },
-  { id: "lake-trout", name: "Deep Water", desc: "Catch a lake trout.",
-    species: ["lake-trout"] },
   { id: "whitefish", name: "Whitefish Whisperer", desc: "Catch a lake whitefish.",
     species: ["lake-whitefish"] },
-  { id: "aurora", name: "Northern Lights", secret: true, desc: "Catch an aurora trout.",
-    species: ["aurora-trout"] },
   { id: "muskie", name: "Fish of 10,000 Casts", secret: true, desc: "Catch a muskellunge.",
     species: ["muskellunge"] },
   { id: "ten-of-a-kind", name: "Specialist", desc: "Catch 10 of the same species.",
@@ -230,16 +224,32 @@ const BADGES = [
     test: (c) => new Set(c.map((x) => (x.bait || "").trim().toLowerCase()).filter(Boolean)).size >= 5 },
   { id: "journal", name: "Journal Keeper", secret: true, desc: "Write notes on 10 catches.",
     test: (c) => countWhere(c, (x) => (x.notes || "").trim()) >= 10 },
+
+  // Fishing methods (picked on the log form; ids match METHODS in methods.js)
+  { id: "method-float", name: "Bobber Watcher", desc: "Catch a fish float fishing.",
+    test: (c) => c.some((x) => x.method === "float") },
+  { id: "method-lure", name: "Cast and Retrieve", desc: "Catch a fish on a lure.",
+    test: (c) => c.some((x) => x.method === "lure") },
+  { id: "method-fly", name: "Fly Guy", desc: "Catch a fish fly fishing.",
+    test: (c) => c.some((x) => x.method === "fly") },
+  { id: "method-ice", name: "Hard Water", desc: "Catch a fish ice fishing.",
+    test: (c) => c.some((x) => x.method === "ice") },
+  { id: "fly-ten", name: "Fly Fanatic", desc: "Catch 10 fish fly fishing.",
+    test: (c) => countWhere(c, (x) => x.method === "fly") >= 10 },
+  { id: "three-methods", name: "Versatile", desc: "Catch fish with 3 different methods.",
+    test: (c) => new Set(c.map((x) => x.method).filter((m) => m && m !== "other")).size >= 3 },
+  { id: "five-methods", name: "Jack of All Trades", secret: true, desc: "Catch fish with 5 different methods.",
+    test: (c) => new Set(c.map((x) => x.method).filter((m) => m && m !== "other")).size >= 5 },
 ];
 
 // Bonus EXP for each badge, by tier. Harder badges give more, and secret badges give 50% extra.
 const BADGE_TIER_EXP = { 1: 25, 2: 50, 3: 100, 4: 250, 5: 500, 6: 1000 };
 const BADGE_TIERS = {
-  1: ["first-catch", "first-release", "say-cheese", "tape-measure", "on-the-scale", "three-species", "five-catches", "early-bird", "night-owl"],
-  2: ["ten-catches", "five-species", "bass-pair", "walleye", "pike", "trio", "five-in-a-day", "lunch-break", "cold-hands", "streak-three", "three-spots", "five-baits", "big-one", "fifty-cm"],
-  3: ["twenty-five-catches", "fifty-catches", "ten-species", "panfish-sweep", "whiskers", "underdogs", "trout-trio", "lake-trout", "whitefish", "ten-of-a-kind", "release-ten", "proof-ten", "five-kg", "measure-twenty-five", "five-species-day", "ten-in-a-day", "graveyard-shift", "round-the-clock", "weekend-warrior", "ten-days", "four-seasons", "ten-spots", "journal"],
-  4: ["hundred-catches", "fifteen-species", "toothy-critters", "salmon-slam", "char-family", "release-fifty", "photo-fifty", "monster", "streak-seven", "twenty-in-a-day"],
-  5: ["two-fifty-catches", "twenty-species", "aurora", "muskie", "release-hundred", "metre-fish", "fifty-days", "year-round", "twenty-five-spots"],
+  1: ["first-catch", "first-release", "say-cheese", "tape-measure", "on-the-scale", "three-species", "five-catches", "early-bird", "night-owl", "method-float", "method-lure"],
+  2: ["ten-catches", "five-species", "bass-pair", "walleye", "pike", "trio", "five-in-a-day", "lunch-break", "cold-hands", "streak-three", "three-spots", "five-baits", "big-one", "fifty-cm", "method-fly", "method-ice", "three-methods"],
+  3: ["twenty-five-catches", "fifty-catches", "ten-species", "panfish-sweep", "whiskers", "underdogs", "trout-trio", "whitefish", "ten-of-a-kind", "release-ten", "proof-ten", "five-kg", "measure-twenty-five", "five-species-day", "ten-in-a-day", "graveyard-shift", "round-the-clock", "weekend-warrior", "ten-days", "four-seasons", "ten-spots", "journal", "fly-ten", "five-methods"],
+  4: ["hundred-catches", "fifteen-species", "toothy-critters", "salmon-slam", "release-fifty", "photo-fifty", "monster", "streak-seven", "twenty-in-a-day"],
+  5: ["two-fifty-catches", "twenty-species", "muskie", "release-hundred", "metre-fish", "fifty-days", "year-round", "twenty-five-spots"],
   6: ["five-hundred-catches", "all-species"],
 };
 Object.entries(BADGE_TIERS).forEach(([tier, ids]) => ids.forEach((id) => {

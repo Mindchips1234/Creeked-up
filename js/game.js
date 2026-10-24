@@ -3,9 +3,15 @@
 
 const MAX_SIZE_MULT = 4;
 
+// A gallery photo only counts as proof if it was taken near the catch time
+// (the app sets photoProof to false when it wasn't). Older catches have no flag and count.
+function photoCounts(c) {
+  return !!c.hasPhoto && c.photoProof !== false;
+}
+
 // How much a catch can be trusted. Catches with a photo and GPS earn full EXP.
 function trustMultiplier(c) {
-  const proofs = (c.hasPhoto ? 1 : 0) + (c.lat != null ? 1 : 0);
+  const proofs = (photoCounts(c) ? 1 : 0) + (c.lat != null ? 1 : 0);
   return [0.5, 0.75, 1][proofs];
 }
 
@@ -72,5 +78,5 @@ function badgeExp(catches) {
 }
 
 if (typeof module !== "undefined") {
-  module.exports = { trustMultiplier, sizeMultiplier, scoreCatches, expForNextLevel, levelFromExp, earnedBadges, badgeExp };
+  module.exports = { photoCounts, trustMultiplier, sizeMultiplier, scoreCatches, expForNextLevel, levelFromExp, earnedBadges, badgeExp };
 }

@@ -5,14 +5,16 @@ const $ = (id) => document.getElementById(id);
 const IN_TO_CM = 2.54;
 const LB_TO_KG = 0.45359237;
 const MAX_PHOTO_PX = 1280;
+const GALLERY_PHOTO_WINDOW_MS = 48 * 3600 * 1000; // a gallery photo must be this close to the catch time to count
 
-let state = { catches: [], scored: [], location: null, photoBlob: null };
+let state = { catches: [], scored: [], location: null, photoBlob: null, photo: null, method: "" };
 
 // ---------- Startup ----------
 
 document.addEventListener("DOMContentLoaded", async () => {
   startIntro();
   fillSpeciesSelect();
+  setupMethods();
   resetForm();
   bindEvents();
   await reload();
@@ -31,6 +33,7 @@ function bindEvents() {
     b.addEventListener("click", () => showView(b.dataset.view)));
 
   $("photo").addEventListener("change", onPhotoChosen);
+  $("photoGallery").addEventListener("change", onPhotoChosen);
   $("locBtn").addEventListener("click", getLocation);
   document.querySelectorAll('input[name="fate"]').forEach((r) =>
     r.addEventListener("change", () => { $("keptWarn").hidden = fateValue() !== "kept"; }));
@@ -49,7 +52,7 @@ function bindEvents() {
     e.preventDefault();
     const name = $("tackleName").value.trim();
     if (!name) return;
-    Tackle.add(name, $("tackleType").value);
+    Tackle.add(name, $("tackleType").value, $("tackleMethod").value);
     $("tackleName").value = "";
     renderTackle();
   });
@@ -109,9 +112,12 @@ function resetForm() {
   $("caughtAt").value = toLocalInput(new Date());
   $("photoPreview").hidden = true;
   $("photoHint").hidden = false;
+  $("photoNote").hidden = true;
   $("keptWarn").hidden = true;
   state.photoBlob = null;
+  state.photo = null;
   state.location = null;
+  pickMethod(MethodPref.get());
   $("locStatus").textContent = "Location not added";
   $("locBtn").textContent = "Add my location";
 }
@@ -120,18 +126,66 @@ function fateValue() {
   return document.querySelector('input[name="fate"]:checked').value;
 }
 
+// Camera photos are taken right now, so they always count as proof.
+// Gallery photos could be old or someone else's, so we read the date and place saved
+// inside the photo, fill those in, and only count the photo if its date fits the catch.
 async function onPhotoChosen(e) {
   const file = e.target.files[0];
+  const fromGallery = e.target.id === "photoGallery";
+  e.target.value = ""; // lets the same photo be picked again after a reset
   if (!file) return;
   try {
+    const bytes = await file.arrayBuffer();
     state.photoBlob = await shrinkImage(file);
+    state.photo = { source: fromGallery ? "gallery" : "camera", takenAt: null, hash: await hashBytes(bytes) };
     $("photoPreview").src = URL.createObjectURL(state.photoBlob);
     $("photoPreview").hidden = false;
     $("photoHint").hidden = true;
-    if (!state.location) getLocation();
+    $("photoNote").hidden = !fromGallery;
+    if (!fromGallery) {
+      if (!state.location) getLocation();
+      return;
+    }
+    const exif = readExif(bytes);
+    state.photo.takenAt = exif.takenAt;
+    const notes = [];
+    if (exif.takenAt) {
+      $("caughtAt").value = toLocalInput(exif.takenAt);
+      notes.push(`Photo taken ${exif.takenAt.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}, so the catch time is set to match.`);
+    } else {
+      notes.push("This photo has no date saved in it (screenshots and photos sent through chat apps usually don't), so it won't add photo EXP. It will still be saved with your catch.");
+    }
+    if (exif.lat != null) {
+      state.location = { lat: exif.lat, lng: exif.lng, accuracy: null, fromPhoto: true };
+      $("locStatus").textContent = "Location added from the photo";
+      $("locBtn").textContent = "Use where I am now";
+      notes.push("The place was filled in from the photo.");
+    } else {
+      if (state.location && state.location.fromPhoto) {
+        // The place came from a photo that was swapped out, so it no longer applies.
+        state.location = null;
+        $("locStatus").textContent = "Location not added";
+        $("locBtn").textContent = "Add my location";
+      }
+      notes.push("No place is saved in this photo. Only tap \"Add my location\" if you're still where you caught it.");
+    }
+    $("photoNote").textContent = notes.join(" ");
   } catch {
     toast("Couldn't read that photo. Try again.");
   }
+}
+
+// A fingerprint of the original photo file, used to stop one photo being logged twice.
+async function hashBytes(bytes) {
+  if (!(window.crypto && crypto.subtle)) return null;
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function photoFitsCatch(photo, caughtAt) {
+  if (!photo) return false;
+  if (photo.source === "camera") return true;
+  return !!photo.takenAt && Math.abs(photo.takenAt - caughtAt) <= GALLERY_PHOTO_WINDOW_MS;
 }
 
 // Photos are resized so they don't fill up the phone's storage.
@@ -173,6 +227,10 @@ async function onSave(e) {
   e.preventDefault();
   const speciesId = $("species").value;
   if (!speciesId) return toast("Pick a species first.");
+  const p = state.photo;
+  if (p && p.hash && state.catches.some((x) => x.photoHash === p.hash)) {
+    return toast("You've already logged a catch with this photo. Use a different photo for each fish.");
+  }
 
   const len = parseFloat($("length").value);
   const wt = parseFloat($("weight").value);
@@ -188,15 +246,22 @@ async function onSave(e) {
     lng: state.location ? state.location.lng : null,
     accuracyM: state.location ? state.location.accuracy : null,
     bait: $("bait").value.trim(),
+    method: state.method,
     released: fateValue() === "released",
     notes: $("notes").value.trim(),
     hasPhoto: !!state.photoBlob,
   };
+  if (p) {
+    c.photoSource = p.source;
+    c.photoProof = photoFitsCatch(p, new Date(c.caughtAt));
+    c.photoHash = p.hash;
+  }
 
   const before = levelFromExp(totalExp(state.scored)).level;
   const badgesBefore = new Set(earnedBadges(state.catches));
   const questsBefore = new Set(weekQuests(state.catches, new Date(c.caughtAt)).filter((q) => q.done).map((q) => q.id));
 
+  if (c.method) MethodPref.set(c.method);
   if (state.photoBlob) await Store.putPhoto(id, state.photoBlob);
   await Store.putCatch(c);
   await reload();
@@ -214,6 +279,7 @@ async function onSave(e) {
   }
   const newQuest = weekQuests(state.catches, new Date(c.caughtAt)).find((q) => q.done && !questsBefore.has(q.id));
   if (newQuest) msg += ` · Quest done: +${newQuest.reward} EXP`;
+  if (c.photoProof === false) msg += " · Photo added no EXP: it has no date, or its date is over 2 days from the catch";
   toast(msg);
 
   resetForm();
@@ -319,16 +385,57 @@ function renderTackle() {
   const items = Tackle.all();
   const counts = {};
   bestBaits(state.catches).forEach((b) => { counts[b.name.toLowerCase()] = b.n; });
-  $("tackleList").innerHTML = items.filter((t) => ["Lure", "Bait", "Fly"].includes(t.type))
+  // Only suggest gear for the method picked on the log form (gear with no method always shows).
+  $("tackleList").innerHTML = items.filter((t) => ["Lure", "Bait", "Fly", "Jig"].includes(t.type))
+    .filter((t) => !t.method || !state.method || t.method === state.method)
     .map((t) => `<option value="${esc(t.name)}"></option>`).join("");
   $("tackleListUi").innerHTML = items.length
-    ? items.map((t) => `<li><span><b>${esc(t.name)}</b> <span class="catch-meta">${esc(t.type)}${counts[t.name.toLowerCase()] ? ` · ${counts[t.name.toLowerCase()]} fish` : ""}</span></span>
+    ? items.map((t) => `<li><span><b>${esc(t.name)}</b> <span class="catch-meta">${esc(t.type)}${methodById(t.method) ? ` · ${esc(methodById(t.method).name)}` : ""}${counts[t.name.toLowerCase()] ? ` · ${counts[t.name.toLowerCase()]} fish` : ""}</span></span>
         <button type="button" class="ghost small-btn" data-del="${esc(t.id)}" aria-label="Remove ${esc(t.name)}">Remove</button></li>`).join("")
     : `<li class="catch-meta">Nothing in your tackle box yet.</li>`;
   $("tackleListUi").querySelectorAll("[data-del]").forEach((b) => b.addEventListener("click", () => {
     Tackle.remove(b.dataset.del);
     renderTackle();
   }));
+}
+
+// ---------- Fishing methods ----------
+
+function setupMethods() {
+  const opts = METHODS.map((m) => `<option value="${m.id}">${esc(m.name)}</option>`).join("");
+  $("tackleMethod").innerHTML = `<option value="">Any method</option>${opts}`;
+  $("catchMethod").innerHTML = `<option value="">All methods</option>${opts}`;
+  $("catchMethod").addEventListener("change", renderCatchList);
+  $("methodChips").innerHTML = METHODS.map((m) =>
+    `<button type="button" class="chip" data-method="${m.id}" aria-pressed="false" title="${esc(m.short)}">${esc(m.name)}</button>`).join("");
+  $("methodChips").querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () =>
+    pickMethod(state.method === b.dataset.method ? "" : b.dataset.method)));
+  document.querySelectorAll("[data-guide]").forEach((b) => b.addEventListener("click", openMethodGuide));
+  $("methodClose").addEventListener("click", () => $("methodDlg").close());
+}
+
+// Tap a method to pick it, tap it again to clear it. It's optional.
+function pickMethod(id) {
+  state.method = methodById(id) ? id : "";
+  $("methodChips").querySelectorAll(".chip").forEach((b) =>
+    b.setAttribute("aria-pressed", String(b.dataset.method === state.method)));
+  renderTackle();
+}
+
+function methodSourceLinks(m) {
+  return m.sources.map((k) => `<a href="${METHOD_SOURCES[k].url}" target="_blank" rel="noopener">${esc(METHOD_SOURCES[k].name)}</a>`).join(" · ");
+}
+
+function openMethodGuide() {
+  $("methodGuide").innerHTML = `<ul class="method-guide">${METHODS.filter((m) => m.id !== "other").map((m) => `
+    <li><div class="badge-name">${esc(m.name)}</div>
+      <p>${esc(m.how)}</p>
+      ${m.gear ? `<p><b>Gear:</b> ${esc(m.gear)}</p>` : ""}
+      ${m.rule ? `<p><b>Rules and safety:</b> ${esc(m.rule)}</p>` : ""}
+      ${m.goodFor.length ? `<p><b>Good for:</b> ${m.goodFor.map((id) => esc(speciesById(id).name)).join(", ")}</p>` : ""}
+      <div class="tip-note">Source: ${methodSourceLinks(m)}</div>
+    </li>`).join("")}</ul>`;
+  $("methodDlg").showModal();
 }
 
 // ---------- Fish scan ----------
@@ -366,14 +473,16 @@ function renderScanResults() {
 
 async function renderCatchList() {
   const list = $("catchList");
-  const items = [...state.scored].reverse();
+  const only = $("catchMethod").value;
+  const items = [...state.scored].reverse().filter((c) => !only || c.method === only);
   $("catchEmpty").hidden = items.length > 0;
+  $("catchEmpty").textContent = only && state.scored.length ? "No catches with this method yet." : "No catches yet. Go fishing!";
   list.innerHTML = items.map((c) => `
     <li><button class="catch-row" data-id="${c.id}">
       <span class="thumb" data-photo="${c.hasPhoto ? c.id : ""}"></span>
       <span class="catch-main">
         <span class="catch-name">${esc(speciesById(c.speciesId).name)}</span>
-        <span class="catch-meta">${fmtDate(c.caughtAt)}${c.lengthCm ? " · " + c.lengthCm + " cm" : ""}</span>
+        <span class="catch-meta">${fmtDate(c.caughtAt)}${c.lengthCm ? " · " + c.lengthCm + " cm" : ""}${methodById(c.method) ? " · " + esc(methodById(c.method).name) : ""}</span>
       </span>
       <span class="catch-exp">+${c.exp}</span>
     </button></li>`).join("");
@@ -391,11 +500,13 @@ function renderStats() {
   const caught = speciesCaught(s);
   const biggest = s.filter((c) => c.lengthCm).sort((a, b) => b.lengthCm - a.lengthCm)[0];
   const released = s.filter((c) => c.released).length;
+  const topMethod = methodCounts(s)[0];
   const cells = [
     ["Catches", s.length],
     ["Species", caught.size],
     ["Total EXP", totalExp(s)],
     ["Released", s.length ? `${Math.round((released / s.length) * 100)}%` : "–"],
+    ["Top method", topMethod ? `${methodById(topMethod.id).name} (${topMethod.n})` : "–"],
     ["Biggest", biggest ? `${biggest.lengthCm} cm ${speciesById(biggest.speciesId).name}` : "–"],
   ];
   $("stats").innerHTML = cells.map(([k, v]) =>
@@ -443,6 +554,7 @@ async function openDetail(id) {
         <dt>When</dt><dd>${fmtDate(c.caughtAt)}</dd>
         ${c.lengthCm ? `<dt>Length</dt><dd>${c.lengthCm} cm (${round1(c.lengthCm / IN_TO_CM)} in)</dd>` : ""}
         ${c.weightKg ? `<dt>Weight</dt><dd>${c.weightKg} kg (${round2(c.weightKg / LB_TO_KG)} lb)</dd>` : ""}
+        ${methodById(c.method) ? `<dt>Method</dt><dd>${esc(methodById(c.method).name)}</dd>` : ""}
         ${c.bait ? `<dt>Bait or lure</dt><dd>${esc(c.bait)}</dd>` : ""}
         <dt>Kept or released</dt><dd>${c.released ? "Released" : "Kept"}</dd>
         ${c.lat != null ? `<dt>Location</dt><dd>Saved privately on this phone</dd>` : ""}
@@ -505,7 +617,7 @@ async function importBackup(e) {
       await Store.putCatch(c);
       if (data.photos && data.photos[c.id]) await Store.putPhoto(c.id, await (await fetch(data.photos[c.id])).blob());
     }
-    if (Array.isArray(data.tackle)) data.tackle.forEach((t) => Tackle.add(t.name, t.type));
+    if (Array.isArray(data.tackle)) data.tackle.forEach((t) => Tackle.add(t.name, t.type, t.method || ""));
     await reload();
     toast(`Imported ${data.catches.length} catches.`);
   } catch {
