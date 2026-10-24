@@ -1,5 +1,5 @@
 // Local storage for catches and photos, using IndexedDB in the browser.
-// Everything stays on this phone. Nothing is uploaded anywhere.
+// Everything is saved on this phone first. With an account, cloud.js also copies it to the account.
 
 const DB_NAME = "creeked-up";
 const DB_VERSION = 1;

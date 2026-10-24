@@ -26,9 +26,18 @@ async function device(browser, label) {
 const tab = (page, name) => page.click(`.tabs button[data-view="${name}"]`);
 const syncText = (page) => page.textContent("#syncStatus");
 async function waitSynced(page) {
-  await page.waitForFunction(async () => !Cloud.busy && (await Cloud.pendingCount()) === 0, null, { timeout: 15000 });
+  for (let i = 0; ; i++) {
+    if (await page.evaluate(async () => !Cloud.busy && (await Cloud.pendingCount()) === 0)) break;
+    if (i > 150) throw new Error("sync didn't finish");
+    await page.waitForTimeout(100);
+  }
   await tab(page, "profile");
   await page.waitForFunction(() => /All catches saved/.test((document.getElementById("syncStatus") || {}).textContent || ""), null, { timeout: 15000 });
+}
+
+async function syncNow(page) {
+  await page.evaluate(() => Cloud.sync());
+  await waitSynced(page);
 }
 
 async function logCatch(page, species, length, withPhoto) {
@@ -105,7 +114,7 @@ async function logIn(page, user) {
   await p2.ctx.setOffline(false);
   await p2.page.evaluate(() => window.dispatchEvent(new Event("online")));
   await waitSynced(p2.page);
-  await p1.page.evaluate(() => Cloud.sync());
+  await syncNow(p1.page);
   await tab(p1.page, "catches");
   await p1.page.waitForFunction(() => document.querySelectorAll("#catchList .catch-row").length === 3);
   step("a catch logged offline uploads later and shows up on the other phone");
@@ -115,9 +124,7 @@ async function logIn(page, user) {
   await p1.page.click("#delBtn");
   await p1.page.waitForFunction(() => document.querySelectorAll("#catchList .catch-row").length === 2);
   await waitSynced(p1.page);
-  await p2.page.evaluate(() => Cloud.sync());
-  await p2.page.waitForTimeout(2000);
-  console.log(await p2.page.evaluate(async () => JSON.stringify({ sync: JSON.parse(localStorage.getItem("creeked-up:sync")).cursor, busy: Cloud.busy, err: Cloud.lastError, local: (await Store.allCatches()).map((c) => [c.id, c._synced]) })));
+  await syncNow(p2.page);
   await tab(p2.page, "catches");
   await p2.page.waitForFunction(() => document.querySelectorAll("#catchList .catch-row").length === 2);
   step("deleting a catch on one phone deletes it on the other");
@@ -171,7 +178,6 @@ async function logIn(page, user) {
   await p1.page.waitForFunction(() => /No friends yet/.test(document.getElementById("friendList").textContent));
   step("deleting an account removes it from friends' lists");
 
-  await p1.page.screenshot({ path: process.env.SHOTS ? `${process.env.SHOTS}/friends.png` : "/dev/null" });
   await browser.close();
   if (errors.length) { console.error("Browser errors:\n" + errors.join("\n")); process.exit(1); }
   console.log("All browser checks passed.");

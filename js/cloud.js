@@ -150,6 +150,8 @@ const Cloud = {
     if (!Cloud.configured()) return;
     Cloud.client = supabase.createClient(CLOUD_CONFIG.url, CLOUD_CONFIG.key, {
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: AUTH_KEY },
+      // Never reuse an old answer from the browser's cache, or a sync could miss new changes.
+      global: { fetch: (url, opts) => fetch(url, { ...opts, cache: "no-store" }) },
     });
     Cloud.client.auth.onAuthStateChange((event, session) => {
       Cloud.session = session;

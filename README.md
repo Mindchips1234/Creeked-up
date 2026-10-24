@@ -21,8 +21,19 @@ This first version is a **mobile web app**. It runs in the browser on iPhone and
 - **Badges** and a **species collection** with your personal best for each fish.
 - **Stats:** catches, species, total EXP, release rate and biggest fish.
 - **Backup:** export and import your catches as a file.
+- **Accounts (optional):** sign up with a username, email and password to keep your catches, photos, badges, stats and tackle box on every phone you log in on. Catches made before you sign up are added to the account. It still works with no signal: catches save on the phone first and upload when you're back online. Sign out, and delete your account (with its photos) from Profile.
+- **Friends:** add friends by username or 8-letter friend code. They have to accept. Then you can see each other's level, stats, badges and catches (fish, size, weight, date, method, bait, kept or released, and photo). Unfriend or block anyone at any time.
 
-Everything is saved only on your phone. Nothing is uploaded.
+Without an account, everything is saved only on your phone and nothing is uploaded.
+
+## Privacy and safety
+
+- **Friends never see where you caught a fish, or your notes.** The database itself only hands friends a fixed list of safe fields (see `friend_catches` in [supabase/setup.sql](supabase/setup.sql)), so this doesn't depend on the app behaving. Photos uploaded to your account are re-saved by the app, which removes the GPS data hidden inside photo files. A photo can still show where you were, so watch the background.
+- **No public profiles or user search.** You can only find someone by their exact username or friend code, and only friends see anything.
+- **You must be 13 or older to make an account.** Sign-up asks for birth month and year (not saved) and turns away anyone younger on that phone. This follows Canada's privacy commissioner, whose [consent guidelines](https://www.priv.gc.ca/en/privacy-topics/privacy-for-businesses/appropriate-handling-of-personal-information/collecting-personal-information-and-consent/consent/gl_omc_201805/) say that, in all but exceptional cases, anyone under 13 needs a parent or guardian's consent. The app can't verify ages, so someone can lie. Under 13s can still use everything else with no account.
+- **Blocking** removes the friendship and stops that person from finding you or sending requests.
+- **No chat or messages**, so strangers can't contact anyone through the app.
+- Your account data is stored by Supabase. Setup is in [docs/accounts-setup.md](docs/accounts-setup.md).
 
 ## How EXP works
 
@@ -52,7 +63,7 @@ The typical lengths and base EXP are set in `js/data.js`. **The typical lengths 
 - The map says where surveys have recorded a fish, not how many there are or whether they're biting. Some records are old.
 - Ontario's access point data was last checked in 2015, and OpenStreetMap is mapped by volunteers. Both can miss spots or be out of date, so always check that a shore is public. Private marinas are labelled as private.
 - Species at risk are left out of Ontario's public survey data on purpose.
-- To search, the app sends a rough area (rounded to about 1 km) to Ontario's map servers and the free Overpass API for OpenStreetMap. Your catches are never sent. The public Overpass server asks apps to keep use light; if the app grows a lot, it will need its own server or a paid one.
+- To search, the app sends a rough area (rounded to about 1 km) to Ontario's map servers and the free Overpass API for OpenStreetMap. Your catches are never sent to them. The public Overpass server asks apps to keep use light; if the app grows a lot, it will need its own server or a paid one.
 - The live map servers haven't been tested from a phone yet. If Ontario's server blocks browser requests, the app falls back to a second method (JSONP) automatically.
 - The tackle tips are general starting points, not expert or official advice.
 - The method guide is summarized from Ontario's [Learn to fish](https://www.ontario.ca/page/learn-fish-online) course, Ontario's [Rules on using fishing tackle](https://www.ontario.ca/page/rules-using-fishing-tackle) and the Canadian Red Cross ice safety tips. "Good for" only lists fish the Ontario guide names for that method or its bait; a fish missing from the list may still bite. The Ontario guide doesn't cover ice fishing tactics, so ice fishing has no "good for" list yet.
@@ -60,7 +71,12 @@ The typical lengths and base EXP are set in `js/data.js`. **The typical lengths 
 - Open-Meteo's free plan is for non-commercial use only. If the app ever has ads or subscriptions, weather needs a paid plan.
 - Only fish found in Zone 17 can be logged, scanned or picked for challenges, based on the province's [FMZ 17 fisheries management plan background (2008)](https://www.ontario.ca/files/2025-06/264336.pdf) and [plan (2009)](https://www.ontario.ca/files/2025-06/264321.pdf). Those are older documents. Lake trout, splake, aurora trout and freshwater drum were removed (see `js/data.js` for why); old catches of them still show.
 - Seasons are Zone 17's zone-wide dates only (in `js/seasons.js`). Some lakes, rivers and fish sanctuaries in the zone have their own dates, and the app can't tell which lake you're on. In season also doesn't mean that fish lives near you.
-- There are no accounts or leaderboards yet.
+- Accounts only work once the free Supabase project is set up (see [docs/accounts-setup.md](docs/accounts-setup.md)). Until then, Profile and Friends say "coming soon".
+- Supabase's free plan pauses the project after a week with no use. Syncing stops until it's restored from the Supabase dashboard; the app keeps working offline. Photo storage is 1 GB in total for everyone.
+- "Forgot your password?" won't send emails until an email service is hooked up to Supabase (step 6 in the setup guide).
+- If two phones change the tackle box while both are offline, the last one to sync wins. Catches don't have this problem.
+- Friends' stats are worked out on each person's phone, so like catches, they're on the honour system.
+- There are no leaderboards yet.
 - Always check the [Ontario Fishing Regulations Summary](https://www.ontario.ca/document/ontario-fishing-regulations-summary) before keeping a fish.
 
 ## For developers
@@ -68,5 +84,6 @@ The typical lengths and base EXP are set in `js/data.js`. **The typical lengths 
 No build step. The app is plain HTML, CSS and JavaScript.
 
 - Run it locally: `python3 -m http.server` and open http://localhost:8000
-- Run the tests: `node --test tests/*.test.js`
+- Run the tests: `node --test tests/*.test.js` (the database tests in `tests/server.test.js` skip unless pointed at a test copy of Supabase; see [supabase/local/README.md](supabase/local/README.md))
+- Accounts: `js/cloud.js` (sign in, sync, friends), `js/account.js` (the screens), `js/config.js` (Supabase URL and publishable key), `supabase/setup.sql` (tables and privacy rules). The Supabase library is in `vendor/supabase/` (supabase-js 2.117.3, MIT).
 - When you change any app file, bump `CACHE` in `sw.js` so phones get the update.

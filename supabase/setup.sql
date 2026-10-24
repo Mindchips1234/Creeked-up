@@ -23,7 +23,7 @@ create table if not exists public.profiles (
 create table if not exists public.catches (
   user_id uuid not null default auth.uid() references auth.users on delete cascade,
   id text not null check (length(id) between 1 and 64),
-  data jsonb not null default '{}' check (pg_column_size(data) < 8000),
+  data jsonb not null default '{}' check (pg_column_size(data) < 65536),
   deleted boolean not null default false,
   updated_at timestamptz not null default now(),
   primary key (user_id, id)
@@ -253,7 +253,7 @@ revoke execute on function public.new_friend_code(), public.handle_new_user(), p
   public.can_view_photos(text) from public, anon, authenticated;
 grant execute on function public.send_friend_request(text), public.respond_friend_request(uuid, boolean),
   public.remove_friend(uuid), public.block_user(uuid), public.list_friends(), public.friend_catches(uuid),
-  public.delete_my_account(), public.are_friends(uuid, uuid), public.can_view_photos(text) to authenticated;
+  public.delete_my_account(), public.can_view_photos(text) to authenticated;
 grant execute on function public.username_available(text) to anon, authenticated;
 
 -- ---------- Photos ----------

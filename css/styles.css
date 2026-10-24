@@ -338,3 +338,7 @@ fieldset.birth select { flex: 1; }
 .friend-catch { cursor: default; }
 .friend-btns { margin-top: 16px; }
 #friendDlg h3 { margin: 16px 0 8px; font-size: 1rem; }
+@media (max-width: 360px) {
+  .tabs button { font-size: 0.75rem; }
+}
+.account-btns button { padding: 8px 12px; font-size: 0.9rem; }

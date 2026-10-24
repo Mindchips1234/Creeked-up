@@ -71,7 +71,7 @@ const MapView = (() => {
   }
 
   // Your own catches, as orange dots. Only catches of the selected fish are shown.
-  // They are drawn on this phone only and never sent anywhere.
+  // They are drawn on this phone only and never sent to the map services.
   function drawCatches() {
     if (!catchLayer) return;
     catchLayer.clearLayers();
