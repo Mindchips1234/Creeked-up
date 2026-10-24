@@ -257,6 +257,7 @@ dd { margin: 0; }
 .quest-reward { color: var(--accent); white-space: nowrap; }
 .quest.done .quest-reward { color: var(--good); }
 .quest-prog { color: var(--muted); font-size: 0.8rem; }
+.quest-hint { margin-top: 10px; }
 
 .conditions { display: grid; gap: 12px; }
 .cond-moon { display: flex; gap: 12px; align-items: center; }

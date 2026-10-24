@@ -9,7 +9,7 @@ This first version is a **mobile web app**. It runs in the browser on iPhone and
 - **Intro:** "Vanderholst Studios presents" plays at launch. Tap to skip, or replay it from Profile.
 - **Home:** your level, quick buttons, your latest catch, your next badge goal, and a link to the fishing regulations.
 - **Map (Find spots):** pick a fish and a distance. It ranks nearby lakes and rivers by how recently and how many of that fish Ontario stocked there, using the province's public [fish stocking records](https://data.ontario.ca/dataset/fish-stocking). It also shows a starting tackle tip, directions, and your own catches as orange dots. Results are saved for a week so they work offline.
-- **Weekly quests:** 3 new quests every Monday, worth bonus EXP when you finish them.
+- **Daily challenges and weekly quests:** 2 new challenges every day and 3 new quests every Monday, worth bonus EXP when you finish them. A "catch this fish" challenge only picks fish that are in season in Ontario's Fisheries Management Zone 17, using the zone-wide dates from the province's [Zone 17 rules](https://www.ontario.ca/page/sport-fishing-variation-order-fisheries-management-zone-17). A fish caught while its season is closed doesn't count toward challenges, and the app tells you to release it.
 - **Conditions:** moon phase (worked out on the phone) and current weather, wind, pressure, sunrise and sunset from [Open-Meteo](https://open-meteo.com/) (free for non-commercial use, CC BY 4.0).
 - **Fish scan:** tap what you see on the fish (spots, whiskers, a white tail tip and so on) and it ranks the likely species, with the key mark to check for each one.
 - **Tackle box:** save your lures and baits. They show up when you log a catch, and the map shows your best bait for each fish.
@@ -55,6 +55,7 @@ The typical lengths and base EXP are set in `js/data.js`. **The typical lengths 
 - The method guide is summarized from Ontario's [Learn to fish](https://www.ontario.ca/page/learn-fish-online) course, Ontario's [Rules on using fishing tackle](https://www.ontario.ca/page/rules-using-fishing-tackle) and the Canadian Red Cross ice safety tips. "Good for" only lists fish the Ontario guide names for that method or its bait; a fish missing from the list may still bite. The Ontario guide doesn't cover ice fishing tactics, so ice fishing has no "good for" list yet.
 - Fish scan is a visual guide, not photo AI. There's no free, reliable fish-photo AI to use: iNaturalist's photo-ID service isn't public. Double-check IDs before keeping a fish.
 - Open-Meteo's free plan is for non-commercial use only. If the app ever has ads or subscriptions, weather needs a paid plan.
+- Seasons are Zone 17's zone-wide dates only (in `js/seasons.js`). Some lakes, rivers and fish sanctuaries in the zone have their own dates, and the app can't tell which lake you're on. In season also doesn't mean that fish lives near you.
 - There are no accounts or leaderboards yet.
 - Always check the [Ontario Fishing Regulations Summary](https://www.ontario.ca/document/ontario-fishing-regulations-summary) before keeping a fish.
 

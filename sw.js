@@ -1,6 +1,6 @@
 // Service worker: keeps the app working with no signal.
 // Bump CACHE when any app file changes so phones pick up the new version.
-const CACHE = "creeked-up-v5";
+const CACHE = "creeked-up-v6";
 const FILES = [
   "./",
   "index.html",
@@ -10,6 +10,7 @@ const FILES = [
   "js/exif.js",
   "js/db.js",
   "js/spots.js",
+  "js/seasons.js",
   "js/quests.js",
   "js/idguide.js",
   "js/conditions.js",

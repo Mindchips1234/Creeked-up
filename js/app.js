@@ -259,7 +259,8 @@ async function onSave(e) {
 
   const before = levelFromExp(totalExp(state.scored)).level;
   const badgesBefore = new Set(earnedBadges(state.catches));
-  const questsBefore = new Set(weekQuests(state.catches, new Date(c.caughtAt)).filter((q) => q.done).map((q) => q.id));
+  const doneQuests = () => [...weekQuests(state.catches, new Date(c.caughtAt)), ...dayChallenges(state.catches, new Date(c.caughtAt))].filter((q) => q.done);
+  const questsBefore = new Set(doneQuests().map((q) => q.id));
 
   if (c.method) MethodPref.set(c.method);
   if (state.photoBlob) await Store.putPhoto(id, state.photoBlob);
@@ -277,9 +278,12 @@ async function onSave(e) {
     const bonus = BADGES.filter((x) => newBadges.includes(x.id)).reduce((sum, x) => sum + x.exp, 0);
     msg += ` · ${b.secret ? "Secret badge" : "Badge"}: ${b.name}${newBadges.length > 1 ? ` +${newBadges.length - 1} more` : ""} (+${bonus} EXP)`;
   }
-  const newQuest = weekQuests(state.catches, new Date(c.caughtAt)).find((q) => q.done && !questsBefore.has(q.id));
-  if (newQuest) msg += ` · Quest done: +${newQuest.reward} EXP`;
+  const newQuest = doneQuests().find((q) => !questsBefore.has(q.id));
+  if (newQuest) msg += ` · Challenge done: +${newQuest.reward} EXP`;
   if (c.photoProof === false) msg += " · Photo added no EXP: it has no date, or its date is over 2 days from the catch";
+  if (!isInSeason(c.speciesId, new Date(c.caughtAt))) {
+    msg += ` · ${speciesById(c.speciesId).name} season is closed in ${ZONE.name} on that date. Release it right away. It doesn't count for challenges.`;
+  }
   toast(msg);
 
   resetForm();
@@ -292,7 +296,7 @@ async function onSave(e) {
 
 // ---------- Rendering ----------
 
-// Catch EXP plus bonus EXP from finished weekly quests and earned badges.
+// Catch EXP plus bonus EXP from finished weekly quests, daily challenges and earned badges.
 function totalExp(scored) {
   return scored.reduce((sum, c) => sum + c.exp, 0) + questExp(scored) + badgeExp(scored);
 }
@@ -341,13 +345,19 @@ function renderHome() {
 }
 
 function renderQuests() {
-  const quests = weekQuests(state.catches, new Date());
-  $("quests").innerHTML = quests.map((q) => `
+  const row = (q) => `
     <li class="quest ${q.done ? "done" : ""}">
       <div class="quest-top"><span class="quest-text">${esc(q.text)}</span><span class="quest-reward">${q.done ? "Done" : `+${q.reward} EXP`}</span></div>
       <div class="bar"><div class="fill" style="width:${Math.round((q.progress / q.goal) * 100)}%"></div></div>
-      <div class="quest-prog">${q.progress} / ${q.goal}</div>
-    </li>`).join("");
+      <div class="quest-prog">${q.progress} / ${q.goal}${q.target ? ` · ${esc(seasonNote(q.target))}` : ""}</div>
+    </li>`;
+  $("daily").innerHTML = dayChallenges(state.catches, new Date()).map(row).join("");
+  $("quests").innerHTML = weekQuests(state.catches, new Date()).map(row).join("");
+}
+
+function seasonNote(speciesId) {
+  const t = seasonText(speciesId, new Date().getFullYear());
+  return t ? `${ZONE.name} season: ${t}` : `Open all year in ${ZONE.name}`;
 }
 
 function renderMoon() {
