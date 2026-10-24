@@ -9,9 +9,14 @@ function photoCounts(c) {
   return !!c.hasPhoto && c.photoProof !== false;
 }
 
+// A friend's catches come without the location, only a note that there was one.
+function hasLocation(c) {
+  return c.lat != null || c.hasLocation === true;
+}
+
 // How much a catch can be trusted. Catches with a photo and GPS earn full EXP.
 function trustMultiplier(c) {
-  const proofs = (photoCounts(c) ? 1 : 0) + (c.lat != null ? 1 : 0);
+  const proofs = (photoCounts(c) ? 1 : 0) + (hasLocation(c) ? 1 : 0);
   return [0.5, 0.75, 1][proofs];
 }
 
@@ -78,5 +83,5 @@ function badgeExp(catches) {
 }
 
 if (typeof module !== "undefined") {
-  module.exports = { photoCounts, trustMultiplier, sizeMultiplier, scoreCatches, expForNextLevel, levelFromExp, earnedBadges, badgeExp };
+  module.exports = { photoCounts, hasLocation, trustMultiplier, sizeMultiplier, scoreCatches, expForNextLevel, levelFromExp, earnedBadges, badgeExp };
 }

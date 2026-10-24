@@ -196,9 +196,37 @@
       <p class="empty" id="catchEmpty">No catches yet. Go fishing!</p>
     </section>
 
+    <!-- Friends -->
+    <section id="view-friends" class="view" aria-labelledby="friends-h">
+      <h1 id="friends-h">Friends</h1>
+      <div id="friendsGate"></div>
+      <div id="friendsMain" hidden>
+        <div class="card friend-me">
+          <div><span class="catch-meta">Your friend code</span><div class="friend-code" id="myCode"></div></div>
+          <button type="button" class="ghost small-btn" id="copyCode">Copy</button>
+        </div>
+        <p class="hint" id="myName"></p>
+        <form id="addFriendForm" class="add-friend">
+          <input type="text" id="friendTarget" placeholder="Their username or friend code" autocapitalize="none" autocomplete="off" spellcheck="false" maxlength="20" required>
+          <button type="submit" class="primary">Add</button>
+        </form>
+        <p class="hint" id="friendMsg" role="status"></p>
+        <div id="requestsBox" hidden>
+          <h2>Requests</h2>
+          <ul class="friend-list" id="requestList"></ul>
+        </div>
+        <h2>Your friends</h2>
+        <ul class="friend-list" id="friendList"></ul>
+        <p class="hint friend-privacy">Friends can see your username, level, stats, badges and catches: the fish, size, weight, date, how you caught it, bait and photo.
+          They <b>never</b> see where you caught a fish or your notes. Only add people you know in real life.
+          Watch what's in the background of your photos, since a photo can show where you were.</p>
+      </div>
+    </section>
+
     <!-- Profile: level, badges, species, stats -->
     <section id="view-profile" class="view" aria-labelledby="profile-h">
       <h1 id="profile-h">Profile</h1>
+      <div class="card account-card" id="accountCard"></div>
       <div class="card level-card">
         <div class="level-num" id="levelNum">1</div>
         <div class="level-info">
@@ -227,7 +255,7 @@
       <ul class="tackle-list" id="tackleListUi"></ul>
 
       <h2>Your data</h2>
-      <p class="hint">Your catches are saved only on this phone. Export a backup now and then so you don't lose them.</p>
+      <p class="hint" id="dataHint">Your catches are saved only on this phone. Export a backup now and then so you don't lose them.</p>
       <div class="data-btns">
         <button type="button" class="ghost" id="exportBtn">Export backup</button>
         <label class="ghost btn-like">Import backup<input type="file" id="importFile" accept="application/json" hidden></label>
@@ -244,6 +272,7 @@
     <button data-view="log">Log</button>
     <button data-view="map">Map</button>
     <button data-view="catches">Catches</button>
+    <button data-view="friends">Friends</button>
     <button data-view="profile">Profile</button>
   </nav>
 
@@ -270,6 +299,54 @@
       <div class="detail-btns"><span></span><button type="button" class="primary" id="methodClose">Close</button></div>
     </div>
   </dialog>
+  <dialog id="authDlg" aria-labelledby="authTitle">
+    <div class="detail-inner">
+      <h2 id="authTitle">Your account</h2>
+      <p class="hint">An account saves your catches, badges and stats so they're on every phone you sign in on, and lets you add friends.</p>
+      <div class="seg-tabs" role="tablist">
+        <button type="button" role="tab" data-auth="signup" aria-selected="true">New account</button>
+        <button type="button" role="tab" data-auth="signin" aria-selected="false">Log in</button>
+      </div>
+      <form id="signupForm" autocomplete="on">
+        <label>Username
+          <input type="text" id="suName" autocapitalize="none" autocomplete="username" spellcheck="false" maxlength="20" required>
+        </label>
+        <p class="hint" id="suNameHint">3 to 20 letters, numbers or _. Friends find you by this, so don't use your full real name.</p>
+        <label>Email
+          <input type="email" id="suEmail" autocomplete="email" required>
+        </label>
+        <label>Password
+          <input type="password" id="suPass" autocomplete="new-password" minlength="8" required>
+        </label>
+        <fieldset class="birth">
+          <legend>When were you born?</legend>
+          <div class="row">
+            <select id="suMonth" aria-label="Birth month" required></select>
+            <select id="suYear" aria-label="Birth year" required></select>
+          </div>
+        </fieldset>
+        <p class="hint">Only used to check you're 13 or older. It isn't saved anywhere.</p>
+        <button type="submit" class="primary">Make my account</button>
+      </form>
+      <form id="signinForm" autocomplete="on" hidden>
+        <label>Email
+          <input type="email" id="siEmail" autocomplete="email" required>
+        </label>
+        <label>Password
+          <input type="password" id="siPass" autocomplete="current-password" required>
+        </label>
+        <button type="submit" class="primary">Log in</button>
+        <button type="button" class="link-btn" id="forgotBtn">Forgot your password?</button>
+      </form>
+      <div id="ageBlock" class="warn" hidden>
+        Sorry, you need to be 13 or older to make an account. You can still use everything else in Creeked Up,
+        and your catches stay saved on this phone.
+      </div>
+      <p class="warn" id="authMsg" role="alert" hidden></p>
+      <div class="detail-btns"><span></span><button type="button" class="ghost" id="authClose">Close</button></div>
+    </div>
+  </dialog>
+  <dialog id="friendDlg" aria-labelledby="friendTitle"></dialog>
   <dialog id="levelUp">
     <div class="levelup-inner">
       <div class="levelup-kicker">Level up!</div>
@@ -281,6 +358,8 @@
   </dialog>
 
   <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="vendor/supabase/supabase.js"></script>
+  <script src="js/config.js"></script>
   <script src="js/data.js"></script>
   <script src="js/game.js"></script>
   <script src="js/exif.js"></script>
@@ -293,7 +372,9 @@
   <script src="js/methods.js"></script>
   <script src="js/tackle.js"></script>
   <script src="js/share.js"></script>
+  <script src="js/cloud.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/account.js"></script>
   <script src="js/mapview.js"></script>
 </body>
 </html>

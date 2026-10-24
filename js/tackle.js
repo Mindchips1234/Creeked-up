@@ -2,6 +2,7 @@
 // you used, so the app can show what has worked best for you.
 
 const TACKLE_KEY = "creeked-up:tackle";
+const TACKLE_AT_KEY = "creeked-up:tackle-at"; // when you last changed it, so the account keeps the newest
 const TACKLE_TYPES = ["Lure", "Bait", "Fly", "Jig", "Float", "Sinker", "Rod", "Reel", "Line"];
 
 const Tackle = {
@@ -9,7 +10,17 @@ const Tackle = {
     try { return JSON.parse(localStorage.getItem(TACKLE_KEY)) || []; } catch { return []; }
   },
   save(items) {
-    try { localStorage.setItem(TACKLE_KEY, JSON.stringify(items)); } catch { /* storage blocked */ }
+    Tackle.replace(items, new Date().toISOString());
+  },
+  // Sets the whole list, and when it was changed (null if never).
+  replace(items, at) {
+    try {
+      localStorage.setItem(TACKLE_KEY, JSON.stringify(items));
+      if (at) localStorage.setItem(TACKLE_AT_KEY, at); else localStorage.removeItem(TACKLE_AT_KEY);
+    } catch { /* storage blocked */ }
+  },
+  updatedAt() {
+    try { return localStorage.getItem(TACKLE_AT_KEY); } catch { return null; }
   },
   // method is optional: the fishing method this item is for (see methods.js), or "" for any.
   add(name, type, method = "") {

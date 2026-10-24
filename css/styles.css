@@ -25,6 +25,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 
 body {
   margin: 0;
@@ -310,3 +311,30 @@ fieldset.method-pick .chips { margin: 6px 0 0; }
 .method-guide li { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
 .method-guide p { margin: 4px 0; font-size: 0.9rem; }
 .method-guide .tip-note a, .map-tip .tip-note a { color: inherit; }
+
+/* Accounts and friends */
+.tabs button { font-size: 0.85rem; padding: 16px 2px; min-width: 0; }
+.account-card { margin-bottom: 12px; display: grid; gap: 4px; }
+.account-btns { margin: 8px 0 0; }
+.bad-text { color: var(--bad); }
+.seg-tabs { display: flex; gap: 6px; margin: 12px 0; }
+.seg-tabs button { flex: 1; background: var(--bg); border-color: var(--line); color: var(--ink); }
+.seg-tabs button[aria-selected="true"] { background: var(--brand); color: var(--bg); border-color: var(--brand); }
+fieldset.birth { border: 0; padding: 0; margin: 0; }
+fieldset.birth legend { font-weight: 600; font-size: 0.92rem; margin-bottom: 4px; }
+fieldset.birth select { flex: 1; }
+#signinForm .link-btn { justify-self: start; }
+.friend-me { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.friend-code { font-size: 1.5rem; font-weight: 800; letter-spacing: 0.12em; font-family: ui-monospace, Menlo, Consolas, monospace; }
+#myName { margin: 8px 0 12px; }
+.add-friend { display: flex; gap: 8px; }
+.add-friend input { flex: 1; min-width: 0; }
+#friendMsg { margin: 8px 0 0; min-height: 1em; }
+.friend-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.friend-row { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.level-num.small { width: 40px; height: 40px; font-size: 1.05rem; flex: none; }
+.friend-privacy { margin-top: 16px; }
+.friend-head { margin-bottom: 4px; }
+.friend-catch { cursor: default; }
+.friend-btns { margin-top: 16px; }
+#friendDlg h3 { margin: 16px 0 8px; font-size: 1rem; }
