@@ -5,6 +5,6 @@
 // Leave them empty and the app works on this phone only, with no accounts.
 
 const CLOUD_CONFIG = {
-  url: "",
-  key: "",
+  url: "https://pxqekdogdrdcdofddjti.supabase.co",
+  key: "sb_publishable_KzTyZNqPpolaMHBh7FqmTw_PFBTnJI3",
 };
