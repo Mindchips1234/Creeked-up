@@ -1,5 +1,5 @@
 // Open seasons for Fisheries Management Zone 17 (Kawarthas, Peterborough, Durham, Northumberland).
-// Pure functions only. Depends on data.js (speciesById).
+// Pure functions only. Depends on data.js (SPECIES, isZoneSpecies).
 //
 // Source: Ontario Sport Fishing Variation Order SF-2025/17, Schedule A (zone-wide rules),
 // in effect from January 1, 2025:
@@ -40,9 +40,7 @@ const ZONE17_SEASONS = {
 
 // Fish that are never picked as a challenge target, and why.
 const NOT_A_TARGET = {
-  "atlantic-salmon": "Zone 17 limit is 0 (release only), and they're rare there.",
-  "aurora-trout": "Not in the Zone 17 rules, so its status there couldn't be checked.",
-  "other": "Not a species.",
+  "atlantic-salmon": "Zone 17 limit is 0 (release only); it's a species being restored there.",
 };
 
 function ruleDate(rule, year) {
@@ -72,7 +70,7 @@ function seasonText(speciesId, year) {
 
 // Species that can be a challenge target on every one of `dates`.
 function challengeTargets(dates) {
-  return SPECIES.filter((sp) => !NOT_A_TARGET[sp.id] && dates.every((d) => isInSeason(sp.id, d))).map((sp) => sp.id);
+  return SPECIES.filter((sp) => isZoneSpecies(sp.id) && !NOT_A_TARGET[sp.id] && dates.every((d) => isInSeason(sp.id, d))).map((sp) => sp.id);
 }
 
 if (typeof module !== "undefined") module.exports = { ZONE, isInSeason, seasonText, challengeTargets, ruleDate };

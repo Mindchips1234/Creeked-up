@@ -86,6 +86,16 @@ test("closed-season catches don't count toward challenges", () => {
   assert.ok(run("dayChallenges(open, new Date(2026, 1, 3)).some(q => q.progress > 0)"));
 });
 
+test("only Zone 17 fish can be logged, scanned or targeted; old catches keep their name", () => {
+  for (const id of ["lake-trout", "splake", "aurora-trout", "freshwater-drum"]) {
+    assert.strictEqual(run(`isZoneSpecies("${id}")`), false, id);
+    assert.notStrictEqual(run(`speciesById("${id}").id`), "other", id);
+    assert.ok(!run(`identify(ID_TRAITS.map(t => t.id)).some(r => r.id === "${id}")`), id);
+  }
+  assert.strictEqual(run('SPECIES.filter(s => s.id !== "other").length'), 21);
+  assert.ok(run('isZoneSpecies("walleye")'));
+});
+
 test("fish scan ranks the right fish first for classic marks", () => {
   assert.strictEqual(run('identify(["whitetail","glassyeye"])[0].id'), "walleye");
   assert.strictEqual(run('identify(["duckbill","spots"])[0].id'), "northern-pike");
