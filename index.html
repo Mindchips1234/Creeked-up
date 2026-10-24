@@ -98,12 +98,17 @@
     <section id="view-log" class="view" aria-labelledby="log-h">
       <h1 id="log-h">Log a catch</h1>
       <form id="catchForm" autocomplete="off">
-        <label class="photo-pick" id="photoPick">
-          <input type="file" id="photo" accept="image/*" capture="environment" hidden>
+        <div class="photo-pick" id="photoPick">
           <img id="photoPreview" alt="" hidden>
-          <span id="photoHint">Tap to take a photo of your fish</span>
-        </label>
-        <p class="hint">Photo and GPS each raise your EXP. A catch with both earns full EXP.</p>
+          <span id="photoHint">Add a photo of your fish</span>
+        </div>
+        <div class="photo-btns">
+          <label class="btn-like primary">Take photo<input type="file" id="photo" accept="image/*" capture="environment" hidden></label>
+          <label class="btn-like ghost">From gallery<input type="file" id="photoGallery" accept="image/*" hidden></label>
+        </div>
+        <p class="hint" id="photoNote" hidden></p>
+        <p class="hint">Photo and GPS each raise your EXP. A catch with both earns full EXP.
+          A gallery photo counts only if it was taken within 2 days of the catch time.</p>
 
         <label>Species
           <select id="species" required></select>
@@ -262,6 +267,7 @@
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="js/data.js"></script>
   <script src="js/game.js"></script>
+  <script src="js/exif.js"></script>
   <script src="js/db.js"></script>
   <script src="js/spots.js"></script>
   <script src="js/quests.js"></script>

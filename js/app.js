@@ -5,8 +5,9 @@ const $ = (id) => document.getElementById(id);
 const IN_TO_CM = 2.54;
 const LB_TO_KG = 0.45359237;
 const MAX_PHOTO_PX = 1280;
+const GALLERY_PHOTO_WINDOW_MS = 48 * 3600 * 1000; // a gallery photo must be this close to the catch time to count
 
-let state = { catches: [], scored: [], location: null, photoBlob: null, method: "" };
+let state = { catches: [], scored: [], location: null, photoBlob: null, photo: null, method: "" };
 
 // ---------- Startup ----------
 
@@ -32,6 +33,7 @@ function bindEvents() {
     b.addEventListener("click", () => showView(b.dataset.view)));
 
   $("photo").addEventListener("change", onPhotoChosen);
+  $("photoGallery").addEventListener("change", onPhotoChosen);
   $("locBtn").addEventListener("click", getLocation);
   document.querySelectorAll('input[name="fate"]').forEach((r) =>
     r.addEventListener("change", () => { $("keptWarn").hidden = fateValue() !== "kept"; }));
@@ -110,8 +112,10 @@ function resetForm() {
   $("caughtAt").value = toLocalInput(new Date());
   $("photoPreview").hidden = true;
   $("photoHint").hidden = false;
+  $("photoNote").hidden = true;
   $("keptWarn").hidden = true;
   state.photoBlob = null;
+  state.photo = null;
   state.location = null;
   pickMethod(MethodPref.get());
   $("locStatus").textContent = "Location not added";
@@ -122,18 +126,66 @@ function fateValue() {
   return document.querySelector('input[name="fate"]:checked').value;
 }
 
+// Camera photos are taken right now, so they always count as proof.
+// Gallery photos could be old or someone else's, so we read the date and place saved
+// inside the photo, fill those in, and only count the photo if its date fits the catch.
 async function onPhotoChosen(e) {
   const file = e.target.files[0];
+  const fromGallery = e.target.id === "photoGallery";
+  e.target.value = ""; // lets the same photo be picked again after a reset
   if (!file) return;
   try {
+    const bytes = await file.arrayBuffer();
     state.photoBlob = await shrinkImage(file);
+    state.photo = { source: fromGallery ? "gallery" : "camera", takenAt: null, hash: await hashBytes(bytes) };
     $("photoPreview").src = URL.createObjectURL(state.photoBlob);
     $("photoPreview").hidden = false;
     $("photoHint").hidden = true;
-    if (!state.location) getLocation();
+    $("photoNote").hidden = !fromGallery;
+    if (!fromGallery) {
+      if (!state.location) getLocation();
+      return;
+    }
+    const exif = readExif(bytes);
+    state.photo.takenAt = exif.takenAt;
+    const notes = [];
+    if (exif.takenAt) {
+      $("caughtAt").value = toLocalInput(exif.takenAt);
+      notes.push(`Photo taken ${exif.takenAt.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}, so the catch time is set to match.`);
+    } else {
+      notes.push("This photo has no date saved in it (screenshots and photos sent through chat apps usually don't), so it won't add photo EXP. It will still be saved with your catch.");
+    }
+    if (exif.lat != null) {
+      state.location = { lat: exif.lat, lng: exif.lng, accuracy: null, fromPhoto: true };
+      $("locStatus").textContent = "Location added from the photo";
+      $("locBtn").textContent = "Use where I am now";
+      notes.push("The place was filled in from the photo.");
+    } else {
+      if (state.location && state.location.fromPhoto) {
+        // The place came from a photo that was swapped out, so it no longer applies.
+        state.location = null;
+        $("locStatus").textContent = "Location not added";
+        $("locBtn").textContent = "Add my location";
+      }
+      notes.push("No place is saved in this photo. Only tap \"Add my location\" if you're still where you caught it.");
+    }
+    $("photoNote").textContent = notes.join(" ");
   } catch {
     toast("Couldn't read that photo. Try again.");
   }
+}
+
+// A fingerprint of the original photo file, used to stop one photo being logged twice.
+async function hashBytes(bytes) {
+  if (!(window.crypto && crypto.subtle)) return null;
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function photoFitsCatch(photo, caughtAt) {
+  if (!photo) return false;
+  if (photo.source === "camera") return true;
+  return !!photo.takenAt && Math.abs(photo.takenAt - caughtAt) <= GALLERY_PHOTO_WINDOW_MS;
 }
 
 // Photos are resized so they don't fill up the phone's storage.
@@ -175,6 +227,10 @@ async function onSave(e) {
   e.preventDefault();
   const speciesId = $("species").value;
   if (!speciesId) return toast("Pick a species first.");
+  const p = state.photo;
+  if (p && p.hash && state.catches.some((x) => x.photoHash === p.hash)) {
+    return toast("You've already logged a catch with this photo. Use a different photo for each fish.");
+  }
 
   const len = parseFloat($("length").value);
   const wt = parseFloat($("weight").value);
@@ -195,6 +251,11 @@ async function onSave(e) {
     notes: $("notes").value.trim(),
     hasPhoto: !!state.photoBlob,
   };
+  if (p) {
+    c.photoSource = p.source;
+    c.photoProof = photoFitsCatch(p, new Date(c.caughtAt));
+    c.photoHash = p.hash;
+  }
 
   const before = levelFromExp(totalExp(state.scored)).level;
   const badgesBefore = new Set(earnedBadges(state.catches));
@@ -214,6 +275,7 @@ async function onSave(e) {
   if (newBadges.length) msg += ` · Badge: ${BADGES.find((b) => b.id === newBadges[0]).name}`;
   const newQuest = weekQuests(state.catches, new Date(c.caughtAt)).find((q) => q.done && !questsBefore.has(q.id));
   if (newQuest) msg += ` · Quest done: +${newQuest.reward} EXP`;
+  if (c.photoProof === false) msg += " · Photo added no EXP: it has no date, or its date is over 2 days from the catch";
   toast(msg);
 
   resetForm();
