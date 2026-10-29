@@ -66,7 +66,7 @@ function ageFrom(year, month, now = new Date()) {
 // The stats friends see. The owner's phone works these out and uploads them.
 function buildSummary(scored, total) {
   const lv = levelFromExp(total);
-  const biggest = scored.filter((c) => c.lengthCm).sort((a, b) => b.lengthCm - a.lengthCm)[0];
+  const biggest = scored.filter((c) => okLength(c)).sort((a, b) => b.lengthCm - a.lengthCm)[0];
   const released = scored.filter((c) => c.released).length;
   const methods = {};
   scored.forEach((c) => { if (c.method) methods[c.method] = (methods[c.method] || 0) + 1; });

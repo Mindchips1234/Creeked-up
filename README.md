@@ -41,11 +41,13 @@ Without an account, everything is saved only on your phone and nothing is upload
 EXP = species base × size bonus × first-of-species (×2) × released (×1.1) × proof
 ```
 
-- **Size bonus:** your fish's length compared to a typical length for its species. Smaller fish count for less, but never under ×0.5. Bigger fish count for more, up to ×4.
+- **Size bonus:** your fish's length compared to a typical length for its species. Smaller fish count for less, but never under ×0.5. Bigger fish count for more, never over ×4. A fish as big as the Ontario record gets between about ×1.8 and ×4, depending on the species.
 - **Proof:** photo and GPS = ×1, one of them = ×0.75, neither = ×0.5.
 - **Gallery photos:** the app reads the date and place saved inside the photo and fills them in. The photo only counts as proof if its date is within 2 days of the catch time, and the same photo can't be logged twice. Screenshots and photos sent through chat apps usually have no date, so they don't count.
 
-The typical lengths and base EXP are set in `js/data.js`. **The typical lengths are rough placeholders** and still need checking against a credible source.
+- **Realistic sizes only:** each fish has a longest and heaviest size the app accepts. They're set a little above the Ontario record (length ×1.2, weight ×1.5) from the [Ontario Record Fish Registry](https://www.ofah.org/fishing/get-fishing/ontario-record-fish/) (Feb 2026 listing). Rock bass, northern pike and brown bullhead have no usable length in the registry, so they use the largest fish on [FishBase](https://www.fishbase.se/). When you enter both length and weight, the weight also has to fit the length, within wide limits. Anything outside these can't be saved, and the app says why and what it accepts, in the units you picked. That also catches cm/in and kg/lb mix-ups. Sizes that got in another way (an older log, a backup, or a friend's catch) are kept but earn no size bonus or size badges, and friends' lists don't show them.
+
+The typical lengths are the middle of the length range on the Ontario government's page for each fish (for example [Walleye](https://www.ontario.ca/page/walleye)). The size limits, typical lengths and base EXP are in `js/data.js`, with sources. The margins above the records are a judgement call, not from a source.
 
 ## Put it online (free, one time)
 

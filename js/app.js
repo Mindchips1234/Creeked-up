@@ -47,6 +47,7 @@ function bindEvents() {
 
   $("exportBtn").addEventListener("click", exportBackup);
   $("importFile").addEventListener("change", importBackup);
+  ["species", "length", "lengthUnit", "weight", "weightUnit"].forEach((id) => $(id).addEventListener("input", clearSizeError));
   $("clearBtn").addEventListener("click", clearEverything);
   $("levelUpClose").addEventListener("click", () => $("levelUp").close());
   $("replayIntro").addEventListener("click", playIntro);
@@ -115,6 +116,23 @@ async function reload() {
 
 // ---------- Log form ----------
 
+// Shows why a length or weight isn't real under the boxes, and puts the cursor in the box to fix.
+function showSizeError(issue, speciesId) {
+  const msg = sizeIssueText(issue, speciesId, $("lengthUnit").value, $("weightUnit").value);
+  const box = $(issue.field);
+  $("sizeError").textContent = msg;
+  $("sizeError").hidden = false;
+  box.setAttribute("aria-invalid", "true");
+  box.focus();
+  toast("That size isn't realistic. See the note under Weight.");
+}
+
+function clearSizeError() {
+  $("sizeError").hidden = true;
+  $("length").removeAttribute("aria-invalid");
+  $("weight").removeAttribute("aria-invalid");
+}
+
 function resetForm() {
   $("catchForm").reset();
   $("caughtAt").value = toLocalInput(new Date());
@@ -122,6 +140,7 @@ function resetForm() {
   $("photoHint").hidden = false;
   $("photoNote").hidden = true;
   $("keptWarn").hidden = true;
+  clearSizeError();
   state.photoBlob = null;
   state.photo = null;
   state.location = null;
@@ -259,6 +278,8 @@ async function onSave(e) {
     notes: $("notes").value.trim(),
     hasPhoto: !!state.photoBlob,
   };
+  const issue = sizeIssue(speciesId, c.lengthCm, c.weightKg);
+  if (issue) return showSizeError(issue, speciesId);
   if (p) {
     c.photoSource = p.source;
     c.photoProof = photoFitsCatch(p, new Date(c.caughtAt));
@@ -339,7 +360,7 @@ function renderHome() {
     ? `<button class="catch-row" data-id="${latest.id}">
         <span class="catch-main">
           <span class="catch-name">${esc(speciesById(latest.speciesId).name)}</span>
-          <span class="catch-meta">${fmtDate(latest.caughtAt)}${latest.lengthCm ? " · " + latest.lengthCm + " cm" : ""}</span>
+          <span class="catch-meta">${fmtDate(latest.caughtAt)}${okLength(latest) ? " · " + latest.lengthCm + " cm" : ""}</span>
         </span>
         <span class="catch-exp">+${latest.exp}</span></button>`
     : `<p class="empty small">Nothing yet. Your first catch earns the First Fish badge.</p>`;
@@ -502,7 +523,7 @@ async function renderCatchList() {
       <span class="thumb" data-photo="${c.hasPhoto ? c.id : ""}"></span>
       <span class="catch-main">
         <span class="catch-name">${esc(speciesById(c.speciesId).name)}</span>
-        <span class="catch-meta">${fmtDate(c.caughtAt)}${c.lengthCm ? " · " + c.lengthCm + " cm" : ""}${methodById(c.method) ? " · " + esc(methodById(c.method).name) : ""}</span>
+        <span class="catch-meta">${fmtDate(c.caughtAt)}${okLength(c) ? " · " + c.lengthCm + " cm" : ""}${methodById(c.method) ? " · " + esc(methodById(c.method).name) : ""}</span>
       </span>
       <span class="catch-exp">+${c.exp}</span>
     </button></li>`).join("");
@@ -518,7 +539,7 @@ async function renderCatchList() {
 function renderStats() {
   const s = state.scored;
   const caught = speciesCaught(s);
-  const biggest = s.filter((c) => c.lengthCm).sort((a, b) => b.lengthCm - a.lengthCm)[0];
+  const biggest = s.filter((c) => okLength(c)).sort((a, b) => b.lengthCm - a.lengthCm)[0];
   const released = s.filter((c) => c.released).length;
   const topMethod = methodCounts(s)[0];
   const cells = [
@@ -551,12 +572,12 @@ function renderBadges() {
 function renderCollection() {
   const best = {};
   state.scored.forEach((c) => {
-    if (!best[c.speciesId] || (c.lengthCm || 0) > (best[c.speciesId].lengthCm || 0)) best[c.speciesId] = c;
+    if (!best[c.speciesId] || (okLength(c) || 0) > (okLength(best[c.speciesId]) || 0)) best[c.speciesId] = c;
   });
   $("collection").innerHTML = SPECIES.filter((s) => s.id !== "other").map((s) => {
     const b = best[s.id];
     return `<li class="${b ? "got" : ""}"><span>${b ? s.name : "???"}</span>
-      <span class="pb">${b ? (b.lengthCm ? `PB ${b.lengthCm} cm` : "Caught") : `${s.base} base EXP`}</span></li>`;
+      <span class="pb">${b ? (okLength(b) ? `PB ${b.lengthCm} cm` : "Caught") : `${s.base} base EXP`}</span></li>`;
   }).join("");
 }
 
@@ -574,6 +595,7 @@ async function openDetail(id) {
         <dt>When</dt><dd>${fmtDate(c.caughtAt)}</dd>
         ${c.lengthCm ? `<dt>Length</dt><dd>${c.lengthCm} cm (${round1(c.lengthCm / IN_TO_CM)} in)</dd>` : ""}
         ${c.weightKg ? `<dt>Weight</dt><dd>${c.weightKg} kg (${round2(c.weightKg / LB_TO_KG)} lb)</dd>` : ""}
+        ${(c.lengthCm && !okLength(c)) || (c.weightKg && !okWeight(c)) ? `<dt>Size</dt><dd>Not a realistic size for this fish, so it doesn't count for the size bonus, badges or records.</dd>` : ""}
         ${methodById(c.method) ? `<dt>Method</dt><dd>${esc(methodById(c.method).name)}</dd>` : ""}
         ${c.bait ? `<dt>Bait or lure</dt><dd>${esc(c.bait)}</dd>` : ""}
         <dt>Kept or released</dt><dd>${c.released ? "Released" : "Kept"}</dd>

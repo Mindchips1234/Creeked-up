@@ -30,7 +30,7 @@ test("quest bonus EXP counts only finished quests", () => {
   // Ten varied catches in one week finish every quest kind except possibly a target species.
   ctx.many = ["bluegill","yellow-perch","rock-bass","pumpkinseed","smallmouth-bass","largemouth-bass","northern-pike","walleye"].map((s, i) => ({
     id: String(i), speciesId: s, caughtAt: new Date(2026, 9, 20, 6, i).toISOString(), createdAt: "x",
-    released: true, hasPhoto: true, lat: 44, lng: -79, lengthCm: 200,
+    released: true, hasPhoto: true, lat: 44, lng: -79, lengthCm: 30,
   }));
   const qs = run("weekQuests(many, new Date(2026, 9, 21))");
   assert.ok(qs.filter((q) => q.kind !== "target").every((q) => q.done), JSON.stringify(qs));

@@ -45,8 +45,8 @@ async function makeCatchCard(c, photoBlob, level) {
   g.fillStyle = "#cfe3df";
   g.font = "500 44px system-ui, sans-serif";
   const bits = [];
-  if (c.lengthCm) bits.push(`${c.lengthCm} cm`);
-  if (c.weightKg) bits.push(`${c.weightKg} kg`);
+  if (okLength(c)) bits.push(`${c.lengthCm} cm`);
+  if (okWeight(c)) bits.push(`${c.weightKg} kg`);
   bits.push(new Date(c.caughtAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }));
   g.fillText(bits.join(" · "), pad, photoH + 190, CARD_W - pad * 2);
 
