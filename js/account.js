@@ -350,7 +350,7 @@ async function openFriend(f) {
         <span class="thumb"${urls[c.id] ? ` style="background-image:url('${esc(urls[c.id])}')"` : ""}></span>
         <span class="catch-main">
           <span class="catch-name">${esc(speciesById(c.speciesId).name)}</span>
-          <span class="catch-meta">${fmtDate(c.caughtAt)}${c.lengthCm ? ` · ${c.lengthCm} cm` : ""}${c.weightKg ? ` · ${c.weightKg} kg` : ""}</span>
+          <span class="catch-meta">${fmtDate(c.caughtAt)}${okLength(c) ? ` · ${c.lengthCm} cm` : ""}${okWeight(c) ? ` · ${c.weightKg} kg` : ""}</span>
           <span class="catch-meta">${[methodById(c.method) && methodById(c.method).name, c.bait, c.released ? "Released" : "Kept"].filter(Boolean).map(esc).join(" · ")}</span>
         </span>
         <span class="catch-exp">+${c.exp}</span>

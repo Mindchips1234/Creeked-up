@@ -80,7 +80,7 @@ const MapView = (() => {
       .filter((c) => c.lat != null && c.speciesId === s.id)
       .forEach((c) => {
         L.circleMarker([c.lat, c.lng], { radius: 7, color: "#b85e12", fillColor: "#e07a1f", fillOpacity: 0.9, weight: 2 })
-          .bindPopup(`<b>Your ${esc(speciesById(c.speciesId).name)}</b><br>${fmtDate(c.caughtAt)}${c.lengthCm ? `<br>${c.lengthCm} cm` : ""}`)
+          .bindPopup(`<b>Your ${esc(speciesById(c.speciesId).name)}</b><br>${fmtDate(c.caughtAt)}${okLength(c) ? `<br>${c.lengthCm} cm` : ""}`)
           .addTo(catchLayer);
       });
   }

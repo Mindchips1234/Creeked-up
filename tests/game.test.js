@@ -19,34 +19,36 @@ const fish = (o) => ({
 });
 
 test("full proof, typical size, first of species earns double base", () => {
-  ctx.list = [fish({ speciesId: "walleye", lengthCm: 45 })];
+  ctx.list = [fish({ speciesId: "walleye", lengthCm: 47 })];
   const [c] = run("scoreCatches(list)");
   assert.strictEqual(c.exp, 100); // 50 base x2 first species
 });
 
 test("second of a species loses the first-catch bonus", () => {
   ctx.list = [
-    fish({ speciesId: "walleye", lengthCm: 45, caughtAt: "2026-10-24T10:00:00.000Z" }),
-    fish({ speciesId: "walleye", lengthCm: 45, caughtAt: "2026-10-24T11:00:00.000Z" }),
+    fish({ speciesId: "walleye", lengthCm: 47, caughtAt: "2026-10-24T10:00:00.000Z" }),
+    fish({ speciesId: "walleye", lengthCm: 47, caughtAt: "2026-10-24T11:00:00.000Z" }),
   ];
   const s = run("scoreCatches(list)");
   assert.strictEqual(JSON.stringify(s.map((c) => c.exp)), "[100,50]");
 });
 
 test("no photo and no GPS halves EXP", () => {
-  ctx.list = [fish({ speciesId: "walleye", lengthCm: 45, hasPhoto: false, lat: null })];
+  ctx.list = [fish({ speciesId: "walleye", lengthCm: 47, hasPhoto: false, lat: null })];
   assert.strictEqual(run("scoreCatches(list)")[0].exp, 50);
 });
 
-test("size bonus is capped and small fish never drop below half", () => {
-  ctx.big = fish({ speciesId: "bluegill", lengthCm: 500 });
-  ctx.small = fish({ speciesId: "bluegill", lengthCm: 1 });
-  assert.strictEqual(run("sizeMultiplier(big)"), 4);
+test("size bonus grows with length, small fish never drop below half, unreal sizes earn nothing", () => {
+  ctx.big = fish({ speciesId: "bluegill", lengthCm: 28.5 }); // 1.5x the typical 19 cm
+  ctx.small = fish({ speciesId: "bluegill", lengthCm: 3 });
+  ctx.fake = fish({ speciesId: "bluegill", lengthCm: 500 });
+  assert.strictEqual(run("sizeMultiplier(big)"), 2);
   assert.strictEqual(run("sizeMultiplier(small)"), 0.5);
+  assert.strictEqual(run("sizeMultiplier(fake)"), 1);
 });
 
 test("release adds 10 percent", () => {
-  ctx.list = [fish({ speciesId: "muskellunge", lengthCm: 100, released: true })];
+  ctx.list = [fish({ speciesId: "muskellunge", lengthCm: 104, released: true })];
   assert.strictEqual(run("scoreCatches(list)")[0].exp, 264); // 120 x2 x1.1
 });
 

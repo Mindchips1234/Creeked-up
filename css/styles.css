@@ -83,6 +83,7 @@ input, select, textarea {
   font-size: 0.9rem;
 }
 .warn a { color: inherit; font-weight: 700; }
+input[aria-invalid="true"] { border-color: var(--accent); outline: 2px solid var(--accent); }
 
 .loc { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 0.9rem; color: var(--muted); }
 

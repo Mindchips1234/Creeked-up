@@ -8,33 +8,35 @@
 //   Atlantic salmon are from section 3.2 and 3.4.2 (Lake Ontario tributaries in the zone).
 //   These documents are older; species can come and go.
 //   base       = EXP for a typical fish of this species (set by hand: rarer or harder fish score more)
-//   typicalCm  = APPROXIMATE typical adult length, used only for the size bonus.
-//                These are rough placeholders, not sourced figures. Check them against
-//                a credible source (for example the Ontario fishing regulations summary
-//                or a provincial fish ID guide) before relying on them.
+//   typicalCm  = typical adult length, used only for the size bonus. It is the middle of the
+//                length range on the Ontario government's page for each fish, for example
+//                https://www.ontario.ca/page/walleye ("Typical length: 35.5-58.4 centimetres").
+//                Each page is www.ontario.ca/page/<the fish's id>. Checked 2026-10-29.
+//                Muskellunge's page gives 71-137 cm but also 28-40 in, which don't match;
+//                the cm figures are used here.
 
 const SPECIES = [
-  { id: "pumpkinseed",      name: "Pumpkinseed",      base: 10,  typicalCm: 15 },
-  { id: "bluegill",         name: "Bluegill",         base: 10,  typicalCm: 18 },
-  { id: "rock-bass",        name: "Rock Bass",        base: 12,  typicalCm: 20 },
+  { id: "pumpkinseed",      name: "Pumpkinseed",      base: 10,  typicalCm: 20 },
+  { id: "bluegill",         name: "Bluegill",         base: 10,  typicalCm: 19 },
+  { id: "rock-bass",        name: "Rock Bass",        base: 12,  typicalCm: 18 },
   { id: "yellow-perch",     name: "Yellow Perch",     base: 15,  typicalCm: 22 },
   { id: "brown-bullhead",   name: "Brown Bullhead",   base: 15,  typicalCm: 28 },
   { id: "white-sucker",     name: "White Sucker",     base: 15,  typicalCm: 40 },
-  { id: "black-crappie",    name: "Black Crappie",    base: 20,  typicalCm: 25 },
-  { id: "common-carp",      name: "Common Carp",      base: 35,  typicalCm: 60 },
-  { id: "channel-catfish",  name: "Channel Catfish",  base: 40,  typicalCm: 55 },
-  { id: "smallmouth-bass",  name: "Smallmouth Bass",  base: 40,  typicalCm: 35 },
-  { id: "largemouth-bass",  name: "Largemouth Bass",  base: 40,  typicalCm: 38 },
-  { id: "brook-trout",      name: "Brook Trout",      base: 45,  typicalCm: 25 },
-  { id: "lake-whitefish",   name: "Lake Whitefish",   base: 45,  typicalCm: 45 },
-  { id: "walleye",          name: "Walleye",          base: 50,  typicalCm: 45 },
+  { id: "black-crappie",    name: "Black Crappie",    base: 20,  typicalCm: 22 },
+  { id: "common-carp",      name: "Common Carp",      base: 35,  typicalCm: 52 },
+  { id: "channel-catfish",  name: "Channel Catfish",  base: 40,  typicalCm: 44 },
+  { id: "smallmouth-bass",  name: "Smallmouth Bass",  base: 40,  typicalCm: 38 },
+  { id: "largemouth-bass",  name: "Largemouth Bass",  base: 40,  typicalCm: 40 },
+  { id: "brook-trout",      name: "Brook Trout",      base: 45,  typicalCm: 28 },
+  { id: "lake-whitefish",   name: "Lake Whitefish",   base: 45,  typicalCm: 48 },
+  { id: "walleye",          name: "Walleye",          base: 50,  typicalCm: 47 },
   { id: "northern-pike",    name: "Northern Pike",    base: 50,  typicalCm: 60 },
-  { id: "rainbow-trout",    name: "Rainbow Trout",    base: 55,  typicalCm: 50 },
-  { id: "brown-trout",      name: "Brown Trout",      base: 55,  typicalCm: 45 },
-  { id: "coho-salmon",      name: "Coho Salmon",      base: 70,  typicalCm: 60 },
-  { id: "atlantic-salmon",  name: "Atlantic Salmon",  base: 80,  typicalCm: 60 },
-  { id: "chinook-salmon",   name: "Chinook Salmon",   base: 85,  typicalCm: 75 },
-  { id: "muskellunge",      name: "Muskellunge",      base: 120, typicalCm: 100 },
+  { id: "rainbow-trout",    name: "Rainbow Trout",    base: 55,  typicalCm: 40 },
+  { id: "brown-trout",      name: "Brown Trout",      base: 55,  typicalCm: 40 },
+  { id: "coho-salmon",      name: "Coho Salmon",      base: 70,  typicalCm: 52 },
+  { id: "atlantic-salmon",  name: "Atlantic Salmon",  base: 80,  typicalCm: 48 },
+  { id: "chinook-salmon",   name: "Chinook Salmon",   base: 85,  typicalCm: 65 },
+  { id: "muskellunge",      name: "Muskellunge",      base: 120, typicalCm: 104 },
   { id: "other",            name: "Other / not sure", base: 5,   typicalCm: null },
 ];
 
@@ -47,11 +49,64 @@ const SPECIES = [
 //   splake:          closed all year in Zone 17 (Variation Order SF-2025/17)
 //   aurora-trout:    not mentioned in either FMZ 17 document
 const OTHER_REGION_SPECIES = [
-  { id: "freshwater-drum",  name: "Freshwater Drum",  base: 25,  typicalCm: 40 },
-  { id: "splake",           name: "Splake",           base: 55,  typicalCm: 40 },
-  { id: "lake-trout",       name: "Lake Trout",       base: 65,  typicalCm: 60 },
-  { id: "aurora-trout",     name: "Aurora Trout",     base: 90,  typicalCm: 30 },
+  { id: "freshwater-drum",  name: "Freshwater Drum",  base: 25,  typicalCm: 48 },
+  { id: "splake",           name: "Splake",           base: 55,  typicalCm: 36 },
+  { id: "lake-trout",       name: "Lake Trout",       base: 65,  typicalCm: 55 },
+  { id: "aurora-trout",     name: "Aurora Trout",     base: 90,  typicalCm: 35 },
 ];
+
+// Size limits. A length or weight past these is not a real fish, so the catch can't be saved
+// with it. Catches that got in another way (an old log, a backup, the account) keep the number,
+// but it earns no size bonus and counts for no size badge.
+//   refCm, refKg = the biggest fish on record. Mostly the Ontario record from the Ontario
+//                  Federation of Anglers and Hunters' Record Fish Registry, listing of
+//                  Feb 13, 2026: https://www.ofah.org/wp-content/uploads/2026/02/Record.Fish_.Listings-Feb.2026.pdf
+//                  (pounds and inches, converted here).
+//                  * = no usable Ontario length, so both numbers are FishBase's largest
+//                  published fish of the species anywhere (https://www.fishbase.se/summary/<Genus-species>.html):
+//                  rock bass 43 cm and 1.4 kg, northern pike 150 cm and 28.4 kg, brown bullhead
+//                  55 cm and 2.7 kg. The registry's brown bullhead row is misprinted.
+//   maxCm        = refCm x 1.2, rounded. (* = FishBase's world maximum, with no margin.)
+//   maxKg        = refKg x 1.5, rounded, because weight varies more than length.
+//                  (Brown bullhead: FishBase's 2.7 kg, with no margin.)
+// The margins are a judgement call, not from a source: room for a new record and a slightly
+// off tape or scale, while still catching typos and cm/in or kg/lb mix-ups.
+const MIN_CM = 2.5;   // 1 inch
+const MIN_KG = 0.01;  // the app saves weight to 0.01 kg
+// Length and weight together: weight is compared with the record fish scaled by length
+// cubed (fish grow in all three directions). Allowed: 0.2x to 2x that, plus or minus 50 g
+// for small fish and kitchen scales. Wide on purpose, so only clearly wrong pairs are caught.
+const WEIGHT_FIT = { low: 0.2, high: 2, slackKg: 0.05 };
+const SIZE_LIMITS = {
+  "pumpkinseed":     { refCm: 27.4,  refKg: 0.62,  maxCm: 33,  maxKg: 0.9 },
+  "bluegill":        { refCm: 28.2,  refKg: 0.83,  maxCm: 34,  maxKg: 1.2 },
+  "rock-bass":       { refCm: 43,    refKg: 1.4,   maxCm: 43,  maxKg: 2.0 },  // * (max kg: Ontario record 1.36 x 1.5)
+  "yellow-perch":    { refCm: 40.0,  refKg: 1.14,  maxCm: 48,  maxKg: 1.7 },
+  "brown-bullhead":  { refCm: 55,    refKg: 2.7,   maxCm: 55,  maxKg: 2.7 },  // *
+  "white-sucker":    { refCm: 61.0,  refKg: 2.65,  maxCm: 73,  maxKg: 4.0 },
+  "black-crappie":   { refCm: 43.2,  refKg: 1.71,  maxCm: 52,  maxKg: 2.6 },
+  "common-carp":     { refCm: 104.1, refKg: 19.0,  maxCm: 125, maxKg: 28.5 },
+  "channel-catfish": { refCm: 99.8,  refKg: 15.13, maxCm: 120, maxKg: 22.7 },
+  "smallmouth-bass": { refCm: 60.3,  refKg: 4.6,   maxCm: 72,  maxKg: 6.9 },
+  "largemouth-bass": { refCm: 55.9,  refKg: 4.73,  maxCm: 67,  maxKg: 7.1 },
+  "brook-trout":     { refCm: 80.0,  refKg: 6.58,  maxCm: 96,  maxKg: 9.9 },
+  "lake-whitefish":  { refCm: 74.9,  refKg: 6.7,   maxCm: 90,  maxKg: 10.1 },
+  "walleye":         { refCm: 92.7,  refKg: 10.09, maxCm: 111, maxKg: 15.1 },
+  "northern-pike":   { refCm: 150,   refKg: 28.4,  maxCm: 150, maxKg: 28.7 }, // * (max kg: Ontario record 19.11 x 1.5)
+  "rainbow-trout":   { refCm: 99.3,  refKg: 18.45, maxCm: 119, maxKg: 27.7 },
+  "brown-trout":     { refCm: 96.5,  refKg: 15.59, maxCm: 116, maxKg: 23.4 },
+  "coho-salmon":     { refCm: 101.6, refKg: 13.25, maxCm: 122, maxKg: 19.9 },
+  "atlantic-salmon": { refCm: 88.9,  refKg: 11.02, maxCm: 107, maxKg: 16.5 },
+  "chinook-salmon":  { refCm: 119.4, refKg: 21.04, maxCm: 143, maxKg: 31.6 },
+  "muskellunge":     { refCm: 147.3, refKg: 29.48, maxCm: 177, maxKg: 44.2 },
+  "freshwater-drum": { refCm: 88.9,  refKg: 10.27, maxCm: 107, maxKg: 15.4 },
+  "splake":          { refCm: 88.9,  refKg: 9.39,  maxCm: 107, maxKg: 14.1 },
+  "lake-trout":      { refCm: 130.8, refKg: 28.63, maxCm: 157, maxKg: 42.9 },
+  "aurora-trout":    { refCm: 56.6,  refKg: 3.01,  maxCm: 68,  maxKg: 4.5 },
+  // Other / not sure: Ontario's biggest freshwater fish, the lake sturgeon (FishBase, Acipenser
+  // fulvescens: 274 cm, 125 kg). No length-weight check, since the fish could be anything.
+  "other":           { refCm: null,  refKg: null,  maxCm: 274, maxKg: 125 },
+};
 
 // Level titles are the cosmetic reward for reaching each level.
 const LEVEL_TITLES = [
@@ -88,9 +143,9 @@ const BADGES = [
   { id: "say-cheese", name: "Say Cheese", desc: "Log a catch with a photo.",
     test: (c) => c.some((x) => x.hasPhoto) },
   { id: "tape-measure", name: "Tape Measure", desc: "Log a catch with its length.",
-    test: (c) => c.some((x) => x.lengthCm) },
+    test: (c) => c.some((x) => okLength(x)) },
   { id: "on-the-scale", name: "On the Scale", desc: "Log a catch with its weight.",
-    test: (c) => c.some((x) => x.weightKg) },
+    test: (c) => c.some((x) => okWeight(x)) },
   { id: "three-species", name: "Variety Pack", desc: "Catch 3 different species.",
     test: (c) => speciesCaught(c).size >= 3 },
   { id: "five-catches", name: "Warming Up", desc: "Log 5 catches.",
@@ -170,13 +225,13 @@ const BADGES = [
   { id: "monster", name: "Monster", secret: true, desc: "Catch a fish twice its typical length.",
     test: (c) => c.some((x) => sizeRatio(x) >= 2) },
   { id: "fifty-cm", name: "Half Metre", desc: "Catch a fish 50 cm or longer.",
-    test: (c) => c.some((x) => x.lengthCm >= 50) },
+    test: (c) => c.some((x) => okLength(x) >= 50) },
   { id: "metre-fish", name: "Metre Fish", secret: true, desc: "Catch a fish 100 cm or longer.",
-    test: (c) => c.some((x) => x.lengthCm >= 100) },
+    test: (c) => c.some((x) => okLength(x) >= 100) },
   { id: "five-kg", name: "Heavyweight", desc: "Catch a fish 5 kg (11 lb) or heavier.",
-    test: (c) => c.some((x) => x.weightKg >= 5) },
+    test: (c) => c.some((x) => okWeight(x) >= 5) },
   { id: "measure-twenty-five", name: "Data Keeper", desc: "Log the length of 25 catches.",
-    test: (c) => countWhere(c, (x) => x.lengthCm) >= 25 },
+    test: (c) => countWhere(c, (x) => okLength(x)) >= 25 },
 
   // One day
   { id: "trio", name: "Triple Threat", desc: "Catch 3 species in one day.",
@@ -355,6 +410,62 @@ function isZoneSpecies(id) {
 
 function sizeRatio(c) {
   const sp = speciesById(c.speciesId);
-  if (!sp.typicalCm || !c.lengthCm) return null;
-  return c.lengthCm / sp.typicalCm;
+  const len = okLength(c);
+  if (!sp.typicalCm || !len) return null;
+  return len / sp.typicalCm;
+}
+
+// What's wrong with a length and weight for this fish, or null if they look real.
+// Either can be null (not measured). Returns { field: "length" | "weight", kind, ... }.
+function sizeIssue(speciesId, lengthCm, weightKg) {
+  const lim = SIZE_LIMITS[speciesById(speciesId).id] || SIZE_LIMITS.other;
+  const hasLen = lengthCm != null;
+  const hasWt = weightKg != null;
+  if (hasLen && !(lengthCm >= MIN_CM)) return { field: "length", kind: "small", limit: MIN_CM };
+  if (hasLen && lengthCm > lim.maxCm) return { field: "length", kind: "big", limit: lim.maxCm, refCm: lim.refCm };
+  if (hasWt && !(weightKg >= MIN_KG)) return { field: "weight", kind: "small", limit: MIN_KG };
+  if (hasWt && weightKg > lim.maxKg) return { field: "weight", kind: "big", limit: lim.maxKg, refKg: lim.refKg };
+  if (hasLen && hasWt && lim.refCm) {
+    const scaled = lim.refKg * Math.pow(lengthCm / lim.refCm, 3);
+    const low = Math.max(0, scaled * WEIGHT_FIT.low - WEIGHT_FIT.slackKg);
+    const high = scaled * WEIGHT_FIT.high + WEIGHT_FIT.slackKg;
+    if (weightKg < low || weightKg > high) return { field: "weight", kind: "fit", low, high };
+  }
+  return null;
+}
+
+// The length and weight that count for EXP, badges and records: null when not measured or not real.
+// A weight that doesn't fit the length is the one dropped.
+function okLength(c) {
+  if (!c.lengthCm) return null;
+  return sizeIssue(c.speciesId, c.lengthCm, null) ? null : c.lengthCm;
+}
+function okWeight(c) {
+  if (!c.weightKg) return null;
+  return sizeIssue(c.speciesId, okLength(c), c.weightKg) ? null : c.weightKg;
+}
+
+// A plain message for a sizeIssue() result, in the units the person typed in ("cm"/"in", "kg"/"lb").
+function sizeIssueText(issue, speciesId, lenUnit = "cm", wtUnit = "kg") {
+  const r = (n, d) => Math.round(n * Math.pow(10, d)) / Math.pow(10, d);
+  const len = (cm) => lenUnit === "in" ? `${r(cm / 2.54, 1)} in` : `${r(cm, 1)} cm`;
+  const wt = (kg) => wtUnit === "lb" ? `${r(kg / 0.45359237, 2)} lb` : `${r(kg, 2)} kg`;
+  const sp = speciesById(speciesId);
+  const fish = sp.id === "other" ? "fish in Ontario" : sp.name;
+  if (issue.field === "length" && issue.kind === "small") {
+    return `That length is too small to be a real catch. Enter at least ${len(issue.limit)}, or leave it blank.`;
+  }
+  if (issue.field === "length") {
+    const rec = issue.refCm ? ` The biggest on record is about ${len(issue.refCm)}.` : "";
+    return `That's too long for a real ${fish}.${rec} The most the app accepts is ${len(issue.limit)}. Check the number, and that you picked the right unit (cm or in).`;
+  }
+  if (issue.kind === "small") {
+    return `That weight is too small to measure. Enter at least ${wt(issue.limit)}, or leave it blank.`;
+  }
+  if (issue.kind === "big") {
+    const rec = issue.refKg ? ` The heaviest on record is about ${wt(issue.refKg)}.` : "";
+    return `That's too heavy for a real ${fish}.${rec} The most the app accepts is ${wt(issue.limit)}. Check the number, and that you picked the right unit (kg or lb).`;
+  }
+  const range = issue.low < MIN_KG ? `up to ${wt(issue.high)}` : `${wt(issue.low)} to ${wt(issue.high)}`;
+  return `That weight doesn't fit a ${sp.name} of that length. For that length the app accepts ${range}. Check both numbers and their units.`;
 }
